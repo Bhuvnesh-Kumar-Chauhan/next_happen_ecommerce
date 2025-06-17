@@ -1,0 +1,8 @@
+[05-Apr-2025 06:12:46 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Support\Facades\Route" not found in /home1/nexthapp/public_html/routes/web.php:47
+Stack trace:
+#0 {main}
+  thrown in /home1/nexthapp/public_html/routes/web.php on line 47
+[13-Apr-2025 22:54:30 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Support\Facades\Route" not found in /home1/nexthapp/public_html/routes/api.php:24
+Stack trace:
+#0 {main}
+  thrown in /home1/nexthapp/public_html/routes/api.php on line 24

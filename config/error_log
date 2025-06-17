@@ -1,0 +1,36 @@
+[24-Jan-2025 06:22:14 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home1/nexthapp/public_html/config/app.php:16
+Stack trace:
+#0 {main}
+  thrown in /home1/nexthapp/public_html/config/app.php on line 16
+[11-Feb-2025 17:00:39 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home1/nexthapp/public_html/config/services.php:18
+Stack trace:
+#0 {main}
+  thrown in /home1/nexthapp/public_html/config/services.php on line 18
+[16-Feb-2025 17:27:31 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home1/nexthapp/public_html/config/database.php:18
+Stack trace:
+#0 {main}
+  thrown in /home1/nexthapp/public_html/config/database.php on line 18
+[05-Apr-2025 06:12:45 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home1/nexthapp/public_html/config/app.php:16
+Stack trace:
+#0 {main}
+  thrown in /home1/nexthapp/public_html/config/app.php on line 16
+[13-Apr-2025 22:53:56 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home1/nexthapp/public_html/config/services.php:18
+Stack trace:
+#0 {main}
+  thrown in /home1/nexthapp/public_html/config/services.php on line 18
+[13-Apr-2025 22:54:05 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home1/nexthapp/public_html/config/app.php:16
+Stack trace:
+#0 {main}
+  thrown in /home1/nexthapp/public_html/config/app.php on line 16
+[13-Apr-2025 22:56:16 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home1/nexthapp/public_html/config/cache.php:18
+Stack trace:
+#0 {main}
+  thrown in /home1/nexthapp/public_html/config/cache.php on line 18
+[13-Apr-2025 22:56:16 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home1/nexthapp/public_html/config/filesystems.php:16
+Stack trace:
+#0 {main}
+  thrown in /home1/nexthapp/public_html/config/filesystems.php on line 16
+[13-Apr-2025 22:56:18 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function resource_path() in /home1/nexthapp/public_html/config/view.php:17
+Stack trace:
+#0 {main}
+  thrown in /home1/nexthapp/public_html/config/view.php on line 17
