@@ -71,7 +71,8 @@ use Vonage\Client as VonageClient;
 use Vonage\SMS\Message\SMS;
 use Vonage\SMS\Message\SMSCollection;
 use App\Models\WebLead;
-
+use Razorpay\Api\Api;
+use Razorpay\Api\Errors\SignatureVerificationError;
 
 class FrontendController extends Controller
 {
@@ -116,16 +117,16 @@ class FrontendController extends Controller
             // $events  = Event::with(['category:id,name'])
             //     ->where([['status', 1], ['is_deleted', 0], ['event_status', 'Pending'], ['end_time', '>', $date->format('Y-m-d H:i:s')]])
             //     ->orderBy('start_time', 'desc')->get();
-            $events  = Event::with(['category:id,name'],['subcategory:id,name'])
+            $events = Event::with(['category:id,name'], ['subcategory:id,name'])
                 ->where([['status', 1], ['is_deleted', 0], ['event_status', 'Pending']])
                 ->orderBy('start_time', 'desc')->get();
-            $offline_events  = Event::with(['category:id,name'],['subcategory:id,name'])
+            $offline_events = Event::with(['category:id,name'], ['subcategory:id,name'])
                 ->where([['status', 1], ['is_deleted', 0], ['event_status', 'Pending'], ['type', 'offline']])
                 ->orderBy('start_time', 'desc')->get();
-                
+
             $organizer = User::role('Organizer')->orderBy('id', 'DESC')->get();
             $category = Category::where('status', 1)->orderBy('id', 'DESC')->with('subcategories')->get();
-           
+
             $blog = Blog::with(['category:id,name'])->where('status', 1)->orderBy('id', 'DESC')->get();
             foreach ($events as $value) {
                 $value->total_ticket = Ticket::where([['event_id', $value->id], ['is_deleted', 0], ['status', 1]])->sum('quantity');
@@ -134,8 +135,8 @@ class FrontendController extends Controller
             }
             $banner = Banner::with('event')->where('status', 1)->get();
             $user = Auth::guard('appuser')->user();
-            $showLinkBanner = Setting::find(1,['show_link_banner','googleplay_link','appstore_link']);
-            return view('frontend.home', compact('events', 'organizer', 'category', 'blog', 'banner', 'user','showLinkBanner','offline_events'));
+            $showLinkBanner = Setting::find(1, ['show_link_banner', 'googleplay_link', 'appstore_link']);
+            return view('frontend.home', compact('events', 'organizer', 'category', 'blog', 'banner', 'user', 'showLinkBanner', 'offline_events'));
         }
     }
     public function login()
@@ -162,8 +163,11 @@ class FrontendController extends Controller
         SEOTools::opengraph()->addProperty(
             'keywords',
             [
-                'login page', $setting->app_name, $setting->app_name . ' Login',
-                'sign-in page', $setting->app_name . ' sign-in'
+                'login page',
+                $setting->app_name,
+                $setting->app_name . ' Login',
+                'sign-in page',
+                $setting->app_name . ' sign-in'
             ]
         );
         SEOTools::opengraph()->addProperty('image', $setting->imagePath . $setting->logo);
@@ -172,7 +176,7 @@ class FrontendController extends Controller
         SEOTools::jsonLd()->addImage($setting->imagePath . $setting->logo);
         return view('frontend.auth.login');
     }
-    
+
     public function userLogin(Request $request)
     {
         $request->validate([
@@ -187,19 +191,19 @@ class FrontendController extends Controller
         $remember = $request->get('remember');
         if ($request->type == 'user') {
             if (Auth::guard('appuser')->attempt($userdata, $remember)) {
-                $user =  Auth::guard('appuser')->user();
-                
+                $user = Auth::guard('appuser')->user();
+
                 $setting = Setting::first(['app_name', 'logo']);
-                
+
                 if ($user->status == 0) {
-                    
+
                     return redirect('user/login')->with('error_msg', 'Blocked By Admin.');
                 }
                 if (!$setting->user_verify) {
-                   
+
                     return redirect()->intended('/');
                 } else {
-                    
+
                     if (!$user->is_verify) {
                         $details = [
                             'id' => $user->id,
@@ -237,12 +241,12 @@ class FrontendController extends Controller
         // if ($request->type == 'org') {
         //     if (Auth::attempt($userdata, $remember)) {
         //         if (Auth::user()->hasRole('Organizer')) {
-                    
+
         //             if (Auth::user()->status == 1) {
         //                 $this->setLanguage(Auth::user());
         //                 return redirect()->intended('organization/home');
         //             } else {
-                        
+
         //                 return Redirect::back();
         //             }
         //         } else {
@@ -273,8 +277,11 @@ class FrontendController extends Controller
             ->setDescription('This is register page')
             ->setCanonical(url()->current())
             ->addKeyword([
-                'register page', $setting->app_name, $setting->app_name . ' Register',
-                'sign-up page', $setting->app_name . ' sign-up'
+                'register page',
+                $setting->app_name,
+                $setting->app_name . ' Register',
+                'sign-up page',
+                $setting->app_name . ' sign-up'
             ]);
 
         OpenGraph::setTitle($setting->app_name . ' - Register' ?? env('APP_NAME'))
@@ -290,9 +297,11 @@ class FrontendController extends Controller
         SEOTools::opengraph()->addProperty(
             'keywords',
             [
-                'register page', $setting->app_name,
+                'register page',
+                $setting->app_name,
                 $setting->app_name . ' Register',
-                'sign-up page', $setting->app_name . ' sign-up'
+                'sign-up page',
+                $setting->app_name . ' sign-up'
             ]
         );
         SEOTools::opengraph()->addProperty('image', $setting->imagePath . $setting->logo);
@@ -337,11 +346,11 @@ class FrontendController extends Controller
             if (Setting::first()->verify_by == 'email' && Setting::first()->mail_host != NULL) {
                 if ($data['user_type'] == 'organizer') {
                     $details = [
-                        'url' => url('organizer/VerificationConfirm/' .  $user->id)
+                        'url' => url('organizer/VerificationConfirm/' . $user->id)
                     ];
                 } else {
                     $details = [
-                        'url' => url('user/VerificationConfirm/' .  $user->id)
+                        'url' => url('user/VerificationConfirm/' . $user->id)
                     ];
                 }
                 Mail::to($user->email)->send(new \App\Mail\VerifyMail($details));
@@ -397,7 +406,7 @@ class FrontendController extends Controller
         }
         return redirect('user/login')->with(['success' => "Congratulations! Your account registration was successful. You can now log in to your account and start using our services. Thank you for choosing our platform"]);
     }
-    
+
     public function adminRegister(Request $request)
     {
         $request->validate([
@@ -408,7 +417,7 @@ class FrontendController extends Controller
             'password' => 'bail|required|min:6',
             'Countrycode' => 'bail|required',
         ]);
-    
+
         $verify = Setting::first()->user_verify == 1 ? 0 : 1;
         $data = $request->all();
         $data['password'] = Hash::make($request->password);
@@ -418,7 +427,7 @@ class FrontendController extends Controller
         $data['language'] = Setting::first()->language;
         $data['phone'] = "+" . $request->Countrycode . $request->phone;
         $data['is_verify'] = $verify;
-    
+
         if ($data['user_type'] == 'organizer') {
             $data['first_name'] = $request->first_name;
             $user = User::create($data);
@@ -427,10 +436,10 @@ class FrontendController extends Controller
                 'organizer_id' => $user->id,
             ]);
         }
-    
+
         if ($user->is_verify == 0) {
             $setting = Setting::first();
-    
+
             if ($setting->verify_by == 'email' && $setting->mail_host != NULL) {
                 if ($data['user_type'] == 'organizer') {
                     $details = [
@@ -440,22 +449,22 @@ class FrontendController extends Controller
                 Mail::to($user->email)->send(new \App\Mail\VerifyMail($details));
                 return redirect('thank-you')->with(['success' => "Verification link has been sent to your email. Please visit that link to complete the verification"]);
             }
-    
+
             if ($setting->verify_by == 'phone') {
                 $otp = rand(100000, 999999);
                 $to = $user->phone;
                 $message = "Your phone verification code is $otp for $setting->app_name.";
-    
+
                 // Twilio
                 if ($setting->enable_twillio == 1) {
                     $twilio_sid = $setting->twilio_account_id;
                     $twilio_token = $setting->twilio_auth_token;
                     $twilio_phone_number = $setting->twilio_phone_number;
-    
+
                     if (empty($twilio_phone_number)) {
                         return redirect()->back()->with('error', 'Twilio sender number is not configured.');
                     }
-    
+
                     try {
                         $twilio = new Clients($twilio_sid, $twilio_token);
                         $twilio->messages->create(
@@ -469,17 +478,17 @@ class FrontendController extends Controller
                         return redirect()->back()->with('error', 'Something went wrong with Twilio.');
                     }
                 }
-    
+
                 // Vonage
                 if ($setting->enable_vonage == 1) {
                     $apiKey = $setting->vonege_api_key;
                     $apiSecret = $setting->vonage_account_secret;
                     $virtualNumber = $setting->vonage_sender_number;
-    
+
                     if (empty($virtualNumber)) {
                         return redirect()->back()->with('error', 'Vonage sender number is not configured.');
                     }
-    
+
                     $response = Http::post('https://rest.nexmo.com/sms/json', [
                         'api_key' => $apiKey,
                         'api_secret' => $apiSecret,
@@ -487,9 +496,9 @@ class FrontendController extends Controller
                         'from' => $virtualNumber,
                         'text' => $message,
                     ]);
-    
+
                     \Log::info('Vonage API Response:', $response->json());
-    
+
                     if ($response->failed() && $setting->enable_twillio == 1) {
                         // Fallback to Twilio
                         try {
@@ -506,7 +515,7 @@ class FrontendController extends Controller
                         }
                     }
                 }
-    
+
                 if ($data['user_type'] == 'organizer') {
                     $user = User::find($user->id);
                     $user->otp = $otp;
@@ -515,14 +524,14 @@ class FrontendController extends Controller
                 }
             }
         }
-    
+
         return redirect('thank-you')->with(['success' => "Congratulations! Your account registration was successful. You can now log in to your account and start using our services. Thank you for choosing our platform"]);
     }
     public function LoginByMail($id)
     {
         $user = AppUser::find($id);
         if (Auth::guard('appuser')->loginUsingId($id)) {
-            $user =  Auth::guard('appuser')->user();
+            $user = Auth::guard('appuser')->user();
             $verify = AppUser::find($user->id);
             $verify->email_verified_at = Carbon::now();
             $verify->is_verify = 1;
@@ -535,7 +544,7 @@ class FrontendController extends Controller
     {
         $user = User::find($id);
         if (Auth::loginUsingId($id)) {
-            $user =  Auth::user();
+            $user = Auth::user();
             $verify = User::find($user->id);
             $verify->email_verified_at = Carbon::now();
             $verify->is_verify = 1;
@@ -551,8 +560,11 @@ class FrontendController extends Controller
             ->setDescription('This is reset password page')
             ->setCanonical(url()->current())
             ->addKeyword([
-                'reset password page', $setting->app_name, $setting->app_name . ' reset password',
-                'forgot password page', $setting->app_name . ' forgot password'
+                'reset password page',
+                $setting->app_name,
+                $setting->app_name . ' reset password',
+                'forgot password page',
+                $setting->app_name . ' forgot password'
             ]);
 
         OpenGraph::setTitle($setting->app_name . ' - reset password' ?? env('APP_NAME'))
@@ -568,9 +580,11 @@ class FrontendController extends Controller
         SEOTools::opengraph()->addProperty(
             'keywords',
             [
-                'reset password page', $setting->app_name,
+                'reset password page',
+                $setting->app_name,
                 $setting->app_name . ' reset password',
-                'forgot password page', $setting->app_name . ' forgot password'
+                'forgot password page',
+                $setting->app_name . ' forgot password'
             ]
         );
         SEOTools::opengraph()->addProperty('image', $setting->imagePath . $setting->logo);
@@ -627,8 +641,11 @@ class FrontendController extends Controller
             ->setDescription('This is organizer register page')
             ->setCanonical(url()->current())
             ->addKeyword([
-                'organizer register page', $setting->app_name, $setting->app_name . ' Organizer Register',
-                'organizer sign-up page', $setting->app_name . ' organizer sign-up'
+                'organizer register page',
+                $setting->app_name,
+                $setting->app_name . ' Organizer Register',
+                'organizer sign-up page',
+                $setting->app_name . ' organizer sign-up'
             ]);
 
         OpenGraph::setTitle($setting->app_name . ' - Organizer Register' ?? env('APP_NAME'))
@@ -644,9 +661,11 @@ class FrontendController extends Controller
         SEOTools::opengraph()->addProperty(
             'keywords',
             [
-                'register page', $setting->app_name,
+                'register page',
+                $setting->app_name,
                 $setting->app_name . ' Organizer Register',
-                'organizer sign-up page', $setting->app_name . ' organizer sign-up'
+                'organizer sign-up page',
+                $setting->app_name . ' organizer sign-up'
             ]
         );
         SEOTools::opengraph()->addProperty('image', $setting->imagePath . $setting->logo);
@@ -681,12 +700,12 @@ class FrontendController extends Controller
         return redirect('login');
     }
 
-    
+
     // public function allEvents(Request $request)
     // {
     //     (new AppHelper)->eventStatusChange();
     //     $setting = Setting::first(['app_name', 'logo']);
-    
+
     //     SEOMeta::setTitle($setting->app_name . ' - All-Events' ?? env('APP_NAME'))
     //         ->setDescription('This is all events page')
     //         ->setCanonical(url()->current())
@@ -697,15 +716,15 @@ class FrontendController extends Controller
     //             'events page',
     //             $setting->app_name . ' Events',
     //         ]);
-    
+
     //     OpenGraph::setTitle($setting->app_name . ' - All-Events' ?? env('APP_NAME'))
     //         ->setDescription('This is all events page')
     //         ->setUrl(url()->current());
-    
+
     //     JsonLdMulti::setTitle($setting->app_name . ' - All-Events' ?? env('APP_NAME'));
     //     JsonLdMulti::setDescription('This is all events page');
     //     JsonLdMulti::addImage($setting->imagePath . $setting->logo);
-    
+
     //     SEOTools::setTitle($setting->app_name . ' - All-Events' ?? env('APP_NAME'));
     //     SEOTools::setDescription('This is all events page');
     //     SEOTools::opengraph()->setUrl(url()->current());
@@ -718,24 +737,24 @@ class FrontendController extends Controller
     //         $setting->app_name . ' Events',
     //     ]);
     //     SEOTools::jsonLd()->addImage($setting->imagePath . $setting->logo);
-    
+
     //     $timezone = Setting::find(1)->timezone;
     //     $date = Carbon::now($timezone);
     //     $events  = Event::with(['category:id,name'], ['subcategory:id,name'])
     //         ->where([['status', 1], ['is_deleted', 0], ['event_status', 'Pending']])->orderBy('id', 'DESC');
-    
+
     //     $chip = array();
-    
+
     //     if ($request->has('type') && $request->type != null) {
     //         $chip['type'] = $request->type;
     //         $events = $events->where('type', $request->type);
     //     }
-    
+
     //     if ($request->has('category') && $request->category != null) {
     //         $chip['category'] = Category::find($request->category)->name;
     //         $events = $events->where('category_id', $request->category);
     //     }
-    
+
     //     if ($request->has('duration') && $request->duration != null) {
     //         $chip['date'] = $request->duration;
     //         if ($request->duration == 'Today') {
@@ -757,20 +776,20 @@ class FrontendController extends Controller
     //             }
     //         }
     //     }
-    
+
     //     if ($request->has('address') && $request->address != null) {
     //         $chip['address'] = Event::find($request->address)->address ?? null;
     //         $events = $events->where('address', $chip['address']);
     //     }
-    
+
     //     $events = $events->orderBy('start_time', 'ASC')->get();
-      
+
     //     foreach ($events as $value) {
     //         $value->total_ticket = Ticket::where([['event_id', $value->id], ['is_deleted', 0], ['status', 1]])->sum('quantity');
     //         $value->sold_ticket = Order::where('event_id', $value->id)->sum('quantity');
     //         $value->available_ticket = $value->total_ticket - $value->sold_ticket;
     //     }
-    
+
     //     $user = Auth::guard('appuser')->user();
     //     $offlinecount = 0;
     //     $onlinecount = 0;
@@ -788,7 +807,7 @@ class FrontendController extends Controller
     {
         (new AppHelper)->eventStatusChange();
         $setting = Setting::first(['app_name', 'logo']);
-    
+
         SEOMeta::setTitle($setting->app_name . ' - All-Events' ?? env('APP_NAME'))
             ->setDescription('This is all events page')
             ->setCanonical(url()->current())
@@ -799,15 +818,15 @@ class FrontendController extends Controller
                 'events page',
                 $setting->app_name . ' Events',
             ]);
-    
+
         OpenGraph::setTitle($setting->app_name . ' - All-Events' ?? env('APP_NAME'))
             ->setDescription('This is all events page')
             ->setUrl(url()->current());
-    
+
         JsonLdMulti::setTitle($setting->app_name . ' - All-Events' ?? env('APP_NAME'));
         JsonLdMulti::setDescription('This is all events page');
         JsonLdMulti::addImage($setting->imagePath . $setting->logo);
-    
+
         SEOTools::setTitle($setting->app_name . ' - All-Events' ?? env('APP_NAME'));
         SEOTools::setDescription('This is all events page');
         SEOTools::opengraph()->setUrl(url()->current());
@@ -820,27 +839,27 @@ class FrontendController extends Controller
             $setting->app_name . ' Events',
         ]);
         SEOTools::jsonLd()->addImage($setting->imagePath . $setting->logo);
-    
+
         $timezone = Setting::find(1)->timezone;
         $date = Carbon::now($timezone);
-    
+
         // Fetch all events
         $events = Event::with(['category:id,name'], ['subcategory:id,name'])
             ->where([['status', 1], ['is_deleted', 0], ['event_status', 'Pending']])
             ->orderBy('id', 'DESC');
-    
+
         $chip = array();
-    
+
         if ($request->has('type') && $request->type != null) {
             $chip['type'] = $request->type;
             $events = $events->where('type', $request->type);
         }
-    
+
         if ($request->has('category') && $request->category != null) {
             $chip['category'] = Category::find($request->category)->name;
             $events = $events->where('category_id', $request->category);
         }
-    
+
         if ($request->has('duration') && $request->duration != null) {
             $chip['date'] = $request->duration;
             if ($request->duration == 'Today') {
@@ -858,23 +877,23 @@ class FrontendController extends Controller
                 if (isset($request->date)) {
                     $tempDate = Carbon::parse($request->date)->format('Y-m-d');
                     $events = $events->whereDate('start_time', '<=', $tempDate)
-                                     ->whereDate('end_time', '>=', $tempDate);
+                        ->whereDate('end_time', '>=', $tempDate);
                 }
             }
         }
-    
+
         if ($request->has('address') && $request->address != null) {
             $chip['address'] = Event::find($request->address)->address ?? null;
             $events = $events->where('address', $chip['address']);
         }
-    
+
         $events = $events->orderBy('start_time', 'ASC')->get();
-    
+
         // Separate events into previous and upcoming
         $previousEvents = [];
         $upcomingEvents = [];
         $currentDate = Carbon::now($timezone);
-    
+
         foreach ($events as $event) {
             if ($event->end_time < $currentDate) {
                 $previousEvents[] = $event; // Event is in the past
@@ -882,18 +901,18 @@ class FrontendController extends Controller
                 $upcomingEvents[] = $event; // Event is in the future
             }
         }
-    
+
         // Calculate ticket counts for all events
         foreach ($events as $value) {
             $value->total_ticket = Ticket::where([['event_id', $value->id], ['is_deleted', 0], ['status', 1]])->sum('quantity');
             $value->sold_ticket = Order::where('event_id', $value->id)->sum('quantity');
             $value->available_ticket = $value->total_ticket - $value->sold_ticket;
         }
-    
+
         $user = Auth::guard('appuser')->user();
         $offlinecount = 0;
         $onlinecount = 0;
-    
+
         foreach ($events as $key => $value) {
             if ($value->type == 'online') {
                 $onlinecount += 1;
@@ -902,7 +921,7 @@ class FrontendController extends Controller
                 $offlinecount += 1;
             }
         }
-    
+
         return view('frontend.events', compact(
             'user',
             'events',
@@ -918,7 +937,7 @@ class FrontendController extends Controller
 
     public function eventDetail($id, $name = null)
     {
-        
+
         $setting = Setting::first(['app_name', 'logo']);
         $currency = Setting::first(['currency_sybmol']);
         $data = Event::with(['category:id,name,image', 'organization:id,first_name,organization_name,bio,last_name,image'])->find($id);
@@ -936,7 +955,7 @@ class FrontendController extends Controller
                 $data->category->name ?? null,
                 $data->tags
             ]);
-       
+
 
         OpenGraph::setTitle($data->name)
             ->setDescription($data->description)
@@ -985,14 +1004,14 @@ class FrontendController extends Controller
             $value->available_qty = $value->quantity - $used;
         }
         $images = explode(",", $data->gallery);
-        $tags =  explode(",", $data->tags);
+        $tags = explode(",", $data->tags);
         $appUser = Auth::guard('appuser')->user();
         $rate = round(Review::where('event_id', $data->id)->avg('rate'));
-        return view('frontend.eventDetail', compact('currency', 'data', 'images', 'tags', 'appUser', 'rate','recommendedEvents'));
+        return view('frontend.eventDetail', compact('currency', 'data', 'images', 'tags', 'appUser', 'rate', 'recommendedEvents'));
     }
     public function ticketDetail($id, $name = null)
     {
-        
+
         $setting = Setting::first(['app_name', 'logo']);
         $currency = Setting::first(['currency_sybmol']);
         $data = Event::with(['category:id,name,image', 'organization:id,first_name,organization_name,bio,last_name,image'])->find($id);
@@ -1010,7 +1029,7 @@ class FrontendController extends Controller
                 $data->category->name ?? null,
                 $data->tags
             ]);
-       
+
 
         OpenGraph::setTitle($data->name)
             ->setDescription($data->description)
@@ -1059,10 +1078,10 @@ class FrontendController extends Controller
             $value->available_qty = $value->quantity - $used;
         }
         $images = explode(",", $data->gallery);
-        $tags =  explode(",", $data->tags);
+        $tags = explode(",", $data->tags);
         $appUser = Auth::guard('appuser')->user();
         $rate = round(Review::where('event_id', $data->id)->avg('rate'));
-        return view('frontend.ticketDetail', compact('currency', 'data', 'images', 'tags', 'appUser', 'rate','recommendedEvents'));
+        return view('frontend.ticketDetail', compact('currency', 'data', 'images', 'tags', 'appUser', 'rate', 'recommendedEvents'));
     }
 
     public function orgDetail($id)
@@ -1197,14 +1216,14 @@ class FrontendController extends Controller
         $data->totalAmountTax = Tax::where([['allow_all_bill', 1], ['status', 1], ['amount_type', 'price']])->sum('price');
         return view('frontend.checkout', compact('data'));
     }
-    
+
     public function checkout1(Request $request, $id)
     {
 
         $data = Ticket::find($id);
         $data->event = Event::find($data->event_id);
-       
-        
+
+
         $setting = Setting::first();
         SEOMeta::setTitle($data->name)
             ->setDescription($data->description)
@@ -1266,12 +1285,12 @@ class FrontendController extends Controller
         }
         $data->totalPersTax = Tax::where([['allow_all_bill', 1], ['status', 1], ['amount_type', 'percentage']])->sum('price');
         $data->totalAmountTax = Tax::where([['allow_all_bill', 1], ['status', 1], ['amount_type', 'price']])->sum('price');
-         
-        $disclaimer = Disclaimer::where('event_id',$data->event_id)->get();
-        $termsandcondition = TermsAndConditions::where('event_id',$data->event_id)->get();
-        return view('frontend.checkout', compact('data','disclaimer','termsandcondition'));
+
+        $disclaimer = Disclaimer::where('event_id', $data->event_id)->get();
+        $termsandcondition = TermsAndConditions::where('event_id', $data->event_id)->get();
+        return view('frontend.checkout', compact('data', 'disclaimer', 'termsandcondition'));
     }
-    
+
     public function applyCoupon(Request $request)
     {
         $total = $request->total;
@@ -1279,7 +1298,7 @@ class FrontendController extends Controller
         $coupon = Coupon::where([['coupon_code', $request->coupon_code], ['status', 1], ['event_id', $request->event_id]])->first();
         if ($coupon) {
             $couponHistory = CouponUsageHistory::where([['coupon_id', $coupon->id], ['appuser_id', Auth::guard('appuser')->user()->id]])->get();
-            if (count($couponHistory) >= $coupon->max_use_per_user ) {
+            if (count($couponHistory) >= $coupon->max_use_per_user) {
                 return response([
                     'success' => false,
                     'message' => 'This coupon is reached max use!'
@@ -1300,7 +1319,13 @@ class FrontendController extends Controller
                         $subtotal = $total - $discount;
 
                         return response([
-                            'success' => true, 'payableamount' => $discount, 'total_price' => $subtotal, 'total' => $total, 'discount' => $coupon->discount, 'coupon_id' => $coupon->id, 'coupon_type' => $coupon->discount_type
+                            'success' => true,
+                            'payableamount' => $discount,
+                            'total_price' => $subtotal,
+                            'total' => $total,
+                            'discount' => $coupon->discount,
+                            'coupon_id' => $coupon->id,
+                            'coupon_type' => $coupon->discount_type
                         ]);
                     } else {
                         return response([
@@ -1327,16 +1352,16 @@ class FrontendController extends Controller
             ]);
         }
     }
-    
+
     public function applyCoupon1(Request $request)
     {
-       
+
         $total = $request->total;
         $date = Carbon::now()->format('Y-m-d');
         $coupon = Coupon::where([['coupon_code', $request->coupon_code], ['status', 1], ['event_id', $request->event_id]])->first();
         if ($coupon) {
             $couponHistory = CouponUsageHistory::where([['coupon_id', $coupon->id]])->get();
-            if (count($couponHistory) >= $coupon->max_use_per_user ) {
+            if (count($couponHistory) >= $coupon->max_use_per_user) {
                 return response([
                     'success' => false,
                     'message' => 'This coupon is reached max use!'
@@ -1357,7 +1382,13 @@ class FrontendController extends Controller
                         $subtotal = $total - $discount;
 
                         return response([
-                            'success' => true, 'payableamount' => $discount, 'total_price' => $subtotal, 'total' => $total, 'discount' => $coupon->discount, 'coupon_id' => $coupon->id, 'coupon_type' => $coupon->discount_type
+                            'success' => true,
+                            'payableamount' => $discount,
+                            'total_price' => $subtotal,
+                            'total' => $total,
+                            'discount' => $coupon->discount,
+                            'coupon_id' => $coupon->id,
+                            'coupon_type' => $coupon->discount_type
                         ]);
                     } else {
                         return response([
@@ -1373,7 +1404,7 @@ class FrontendController extends Controller
                 }
             } else {
 
-               
+
                 return response([
                     'success' => false,
                     'message' => 'This coupon is expire!'
@@ -1386,31 +1417,66 @@ class FrontendController extends Controller
             ]);
         }
     }
-    
-    
+    public function createRazorpayOrder(Request $request)
+    {
+        $setting = PaymentSetting::find(1);
+        $api = new Api($setting->razorPublishKey, $setting->razorSecretKey);
+
+        $amount = $request->amount * 100;
+        $order = $api->order->create([
+            'receipt' => uniqid(),
+            'amount' => $amount,
+            'currency' => 'INR',
+            'payment_capture' => 1
+        ]);
+
+        return response()->json([
+            'order_id' => $order['id'],
+            'amount' => $amount
+        ]);
+    }
+
     public function createOrder1(Request $request)
     {
         try {
+            if ($request->payment_type == 'RAZORPAY') {
+                $setting = \App\Models\PaymentSetting::find(1);
+                $api = new Api($setting->razorPublishKey, $setting->razorSecretKey);
+
+                $attributes = [
+                    'razorpay_order_id' => $request->razorpay_order_id,
+                    'razorpay_payment_id' => $request->payment_token,
+                    'razorpay_signature' => $request->razorpay_signature
+                ];
+
+                try {
+                    $api->utility->verifyPaymentSignature($attributes);
+                } catch (SignatureVerificationError $e) {
+                    \Log::error('Razorpay Signature verification failed: ' . $e->getMessage());
+                    return response()->json(['success' => false, 'message' => 'Payment verification failed']);
+                }
+            }
+
+            // ✅ STEP 2: Continue with your existing logic
             $data = $request->all();
             $ticket = Ticket::findOrFail($request->ticket_id);
-            
+
             if ($ticket->allday == 0) {
                 $request->validate(['ticket_date' => 'bail|required']);
             }
-    
+
             $isGuest = !Auth::guard('appuser')->check();
             $setting = Setting::find(1);
-            $gst_number = null;
             $userEmail = null;
             $userName = null;
-    
+
             if ($isGuest) {
                 $request->validate([
                     'name' => 'required',
                     'email' => 'required',
                     'phone' => 'required',
                 ]);
-                
+
                 $userEmail = $request->email;
                 $userName = $request->name;
                 $data['phone'] = $request->phone;
@@ -1424,43 +1490,33 @@ class FrontendController extends Controller
                 $data['customer_id'] = $user->id;
             }
 
-    
             if ($request->payment_type == 'WALLET' && !$isGuest) {
                 if ($user->balance < $request->payment) {
                     return response()->json(['success' => false, 'message' => 'Insufficient balance']);
                 }
                 $user->withdraw($request->payment, ['event_id' => $request->ticket_id]);
             }
-    
+
             $event = Event::find($ticket->event_id);
             $org = User::find($event->user_id);
-            
+
             $data['order_id'] = '#' . rand(9999, 100000);
             $data['event_id'] = $event->id;
             $data['organization_id'] = $org->id;
-            $data['order_status'] = 'Pending';
-    
-            if ($request->payment_type == 'LOCAL') {
-                $data['payment_status'] = 0;
-                $data['order_status'] = 'Pending';
-            } else {
-                $data['payment_status'] = 1;
-                $data['order_status'] = 'Complete';
-            }
-    
+            $data['order_status'] = in_array($request->payment_type, ['LOCAL', 'WALLET']) ? 'Pending' : 'Complete';
+            $data['payment_status'] = in_array($request->payment_type, ['LOCAL', 'WALLET']) ? 0 : 1;
+
             $com = Setting::find(1, ['org_commission_type', 'org_commission']);
             $p = $request->payment - $request->tax;
+
             if ($request->payment_type == "FREE") {
-                $data['org_commission']  = 0;
+                $data['org_commission'] = 0;
             } else {
-                if ($com->org_commission_type == "percentage") {
-                    $data['org_commission'] =  $p * $com->org_commission / 100;
-                } else if ($com->org_commission_type == "amount") {
-                    $data['org_commission']  = $com->org_commission;
-                }
+                $data['org_commission'] = $com->org_commission_type === "percentage"
+                    ? ($p * $com->org_commission / 100)
+                    : $com->org_commission;
             }
-    
-            // Handle coupon if exists
+
             if ($request->coupon_code) {
                 $coupon = Coupon::find($request->coupon_code);
                 $coupon->increment('use_count');
@@ -1471,26 +1527,23 @@ class FrontendController extends Controller
                 $data['coupon_discount'] = $coupon->discount;
                 $data['coupon_id'] = $coupon->id;
             }
-    
-            // Handle seats if exists
-            $data['book_seats'] = isset($request->selectedSeatsId) ? $request->selectedSeatsId : null;
-            $data['seat_details'] = isset($request->selectedSeats) ? $request->selectedSeats : null;
-            
+
+            $data['book_seats'] = $request->selectedSeatsId ?? null;
+            $data['seat_details'] = $request->selectedSeats ?? null;
+
             $order = Order::create($data);
-    
-            // Mark seats as occupied if seatmap module is enabled
+
+            // Update seats
             $module = Module::where('module', 'Seatmap')->first();
-            if ($module->is_enable == 1 && $module->is_install == 1) {
-                $seats = explode(',', $data['selectedSeatsId']);
-                foreach ($seats as $key => $value) {
-                    $seat = Seats::find($value);
+            if ($module && $module->is_enable && $module->is_install && $request->selectedSeatsId) {
+                foreach (explode(',', $request->selectedSeatsId) as $seatId) {
+                    $seat = Seats::find($seatId);
                     if ($seat) {
                         $seat->update(['type' => 'occupied']);
                     }
                 }
             }
-    
-            // Create order children
+
             for ($i = 1; $i <= $request->quantity; $i++) {
                 OrderChild::create([
                     'ticket_number' => uniqid(),
@@ -1501,8 +1554,7 @@ class FrontendController extends Controller
                     'paid' => in_array($request->payment_type, ['LOCAL', 'FREE']) ? 0 : 1,
                 ]);
             }
-    
-            // Handle taxes if exists
+
             if ($request->tax_data) {
                 foreach (json_decode($request->tax_data) as $value) {
                     OrderTax::create([
@@ -1512,19 +1564,19 @@ class FrontendController extends Controller
                     ]);
                 }
             }
-    
-            // Send notifications and emails
+
             $this->sendUserNotifications($order, $userName, $userEmail, $request->quantity, $event, $setting);
             $this->sendOrganizerNotifications($order, $userName, $org, $request->quantity, $event, $setting);
-    
-            return response()->json(['success' => true, 'message' => 'Payment successful',]);
-    
+
+            return response()->json(['success' => true, 'message' => 'Payment successful']);
+
         } catch (\Exception $e) {
-            Log::error('Order creation failed: ' . $e->getMessage());
+            \Log::error('Order creation failed: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'An error occurred during order processing']);
         }
     }
-    
+
+
     protected function sendUserNotifications($order, $userName, $userEmail, $quantity, $event, $setting)
     {
         try {
@@ -1537,13 +1589,13 @@ class FrontendController extends Controller
                 'date' => $event->start_time->format('d F Y h:i a'),
                 'app_name' => $setting->app_name
             ];
-            
+
             $message = str_replace(
-                ["{{user_name}}", "{{quantity}}", "{{event_name}}", "{{date}}", "{{app_name}}"], 
-                $detail, 
+                ["{{user_name}}", "{{quantity}}", "{{event_name}}", "{{date}}", "{{app_name}}"],
+                $detail,
                 $message
             );
-    
+
             Notification::create([
                 'organizer_id' => null,
                 'user_id' => $order->customer_id,
@@ -1551,7 +1603,7 @@ class FrontendController extends Controller
                 'title' => 'Ticket Booked',
                 'message' => $message
             ]);
-    
+
             // Push notification if enabled and user is logged in
             if ($setting->push_notification == 1 && $order->customer_id) {
                 $user = AppUser::find($order->customer_id);
@@ -1559,27 +1611,27 @@ class FrontendController extends Controller
                     (new AppHelper)->sendOneSignal('user', $user->device_token, $message);
                 }
             }
-    
+
             // Send email if enabled
             if ($setting->mail_notification == 1 && $userEmail) {
                 $ticket_book = NotificationTemplate::where('title', 'Book Ticket')->first();
                 $qrcode = $order->order_id;
-                
+
                 Mail::to($userEmail)->send(new TicketBook(
-                    $ticket_book->mail_content, 
-                    $detail, 
-                    $ticket_book->subject, 
+                    $ticket_book->mail_content,
+                    $detail,
+                    $ticket_book->subject,
                     $qrcode
                 ));
-                
+
                 $this->sendTicketPdf($order->id, $userEmail);
             }
-    
+
         } catch (\Exception $e) {
             Log::error('User notification failed: ' . $e->getMessage());
         }
     }
-    
+
     protected function sendOrganizerNotifications($order, $userName, $org, $quantity, $event, $setting)
     {
         try {
@@ -1593,13 +1645,13 @@ class FrontendController extends Controller
                 'date' => $event->start_time->format('d F Y h:i a'),
                 'app_name' => $setting->app_name
             ];
-            
+
             $or_message = str_replace(
-                ["{{organizer_name}}", "{{user_name}}", "{{quantity}}", "{{event_name}}", "{{date}}", "{{app_name}}"], 
-                $or_detail, 
+                ["{{organizer_name}}", "{{user_name}}", "{{quantity}}", "{{event_name}}", "{{date}}", "{{app_name}}"],
+                $or_detail,
                 $or_message
             );
-    
+
             Notification::create([
                 'organizer_id' => $org->id,
                 'user_id' => null,
@@ -1607,39 +1659,39 @@ class FrontendController extends Controller
                 'title' => 'New Ticket Booked',
                 'message' => $or_message
             ]);
-    
+
             // Push notification to organizer if enabled
             if ($setting->push_notification == 1 && $org->device_token) {
                 (new AppHelper)->sendOneSignal('organizer', $org->device_token, $or_message);
             }
-    
+
             // Send email to organizer if enabled
             if ($setting->mail_notification == 1) {
                 $new_ticket = NotificationTemplate::where('title', 'Organizer Book Ticket')->first();
                 Mail::to($org->email)->send(new TicketBookOrg(
-                    $new_ticket->mail_content, 
-                    $or_detail, 
+                    $new_ticket->mail_content,
+                    $or_detail,
                     $new_ticket->subject
                 ));
             }
-    
+
         } catch (\Exception $e) {
             Log::error('Organizer notification failed: ' . $e->getMessage());
         }
     }
-    
+
     protected function sendTicketPdf($orderId, $email)
     {
         try {
             $order = Order::with(['customer', 'event', 'organization', 'ticket'])
                 ->findOrFail($orderId);
-                
+
             $order->tax_data = OrderTax::where('order_id', $order->id)->get();
             $order->ticket_data = OrderChild::where('order_id', $order->id)->get();
-            
+
             $customPaper = [0, 0, 720, 1440];
             $pdf = FacadePdf::loadView('ticketmail', compact('order'))->save(public_path("ticket.pdf"))->setPaper($customPaper, $orientation = 'portrait');
-            
+
             $data["email"] = $email;
             $data["title"] = "Ticket PDF";
             $data["body"] = "";
@@ -1648,19 +1700,19 @@ class FrontendController extends Controller
             if (!$sender) {
                 throw new \Exception('Sender settings not found');
             }
-             Mail::send('mail', $data, function ($message) use ($data, $tempp, $sender) {
+            Mail::send('mail', $data, function ($message) use ($data, $tempp, $sender) {
                 $message->from($sender->sender_email, $sender->app_name)
                     ->to($data["email"])
                     ->subject($data["title"])
                     ->attachData($tempp, "ticket.pdf");
             });
             Log::info("Ticket PDF sent to {$email}");
-    
+
         } catch (Throwable $th) {
             Log::info($th->getMessage());
         }
     }
-    
+
     public function createOrder(Request $request)
     {
         $data = $request->all();
@@ -1699,14 +1751,14 @@ class FrontendController extends Controller
 
 
         $com = Setting::find(1, ['org_commission_type', 'org_commission']);
-        $p =   $request->payment - $request->tax;
+        $p = $request->payment - $request->tax;
         if ($request->payment_type == "FREE") {
-            $data['org_commission']  = 0;
+            $data['org_commission'] = 0;
         } else {
             if ($com->org_commission_type == "percentage") {
-                $data['org_commission'] =  $p * $com->org_commission / 100;
+                $data['org_commission'] = $p * $com->org_commission / 100;
             } else if ($com->org_commission_type == "amount") {
-                $data['org_commission']  = $com->org_commission;
+                $data['org_commission'] = $com->org_commission;
             }
         }
 
@@ -1715,8 +1767,8 @@ class FrontendController extends Controller
             $count = $coupon->use_count + 1;
             $coupon->update(['use_count' => $count]);
             CouponUsageHistory::create([
-                'coupon_id'=> $request->coupon_code,
-                'appuser_id'=> $user->id
+                'coupon_id' => $request->coupon_code,
+                'appuser_id' => $user->id
             ]);
             $data['coupon_discount'] = $coupon->discount;
             $data['coupon_id'] = $coupon->id;
@@ -1742,7 +1794,7 @@ class FrontendController extends Controller
             $child['order_id'] = $order->id;
             $child['customer_id'] = Auth::guard('appuser')->user()->id;
             $child['checkin'] = $ticket->maximum_checkins ?? null;
-            $child['paid'] = $request->payment_type == 'LOCAL' ? 0 : 1 ;
+            $child['paid'] = $request->payment_type == 'LOCAL' ? 0 : 1;
             OrderChild::create($child);
         }
         if (isset($request->tax_data)) {
@@ -1797,7 +1849,7 @@ class FrontendController extends Controller
         }
 
         // for Organizer notification
-        $org =  User::find($order->organization_id);
+        $org = User::find($order->organization_id);
         $or_message = NotificationTemplate::where('title', 'Organizer Book Ticket')->first()->message_content;
         $or_detail['organizer_name'] = $org->organization_name;
         $or_detail['user_name'] = $user->first_name . ' ' . $user->last_name;
@@ -1808,7 +1860,7 @@ class FrontendController extends Controller
         $or_noti_data = ["{{organizer_name}}", "{{user_name}}", "{{quantity}}", "{{event_name}}", "{{date}}", "{{app_name}}"];
         $or_message1 = str_replace($or_noti_data, $or_detail, $or_message);
         $or_notification = array();
-        $or_notification['organizer_id'] =  $org->id;
+        $or_notification['organizer_id'] = $org->id;
         $or_notification['user_id'] = null;
         $or_notification['order_id'] = $order->id;
         $or_notification['title'] = 'New Ticket Booked';
@@ -1861,14 +1913,14 @@ class FrontendController extends Controller
         }
         return true;
     }
-    
-    
-    
+
+
+
     public function categoryEvents($id, $name)
     {
         $setting = Setting::first(['app_name', 'logo']);
         $category = Category::find($id);
-    
+
         SEOMeta::setTitle($setting->app_name . '- Events' ?? env('APP_NAME'))
             ->setDescription('This is category events page')
             ->setCanonical(url()->current())
@@ -1879,15 +1931,15 @@ class FrontendController extends Controller
                 $setting->app_name . ' Events',
                 'events page',
             ]);
-    
+
         OpenGraph::setTitle($setting->app_name . ' - Events' ?? env('APP_NAME'))
             ->setDescription('This is category events page')
             ->setUrl(url()->current());
-    
+
         JsonLdMulti::setTitle($setting->app_name . ' - Events' ?? env('APP_NAME'));
         JsonLdMulti::setDescription('This is category events page');
         JsonLdMulti::addImage($setting->imagePath . $setting->logo);
-    
+
         SEOTools::setTitle($setting->app_name . ' - Events' ?? env('APP_NAME'));
         SEOTools::setDescription('This is category events page');
         SEOTools::opengraph()->setUrl(url()->current());
@@ -1900,25 +1952,25 @@ class FrontendController extends Controller
             'events page',
         ]);
         SEOTools::jsonLd()->addImage($setting->imagePath . $setting->logo);
-    
+
         $timezone = Setting::find(1)->timezone;
         $currentDate = Carbon::now($timezone);
-    
+
         // Fetch events based on category
         $events = Event::with(['category:id,name'])
             ->where([
-                ['status', 1], 
-                ['is_deleted', 0], 
-                ['category_id', $id], 
+                ['status', 1],
+                ['is_deleted', 0],
+                ['category_id', $id],
                 ['event_status', 'Pending']
             ])
             ->orderBy('start_time', 'ASC')
             ->get();
-    
+
         // Separate events into previous and upcoming
         $previousEvents = [];
         $upcomingEvents = [];
-    
+
         foreach ($events as $event) {
             if ($event->end_time < $currentDate) {
                 $previousEvents[] = $event; // Past event
@@ -1926,7 +1978,7 @@ class FrontendController extends Controller
                 $upcomingEvents[] = $event; // Future event
             }
         }
-    
+
         // Count online and offline events
         $offlinecount = 0;
         $onlinecount = 0;
@@ -1938,18 +1990,18 @@ class FrontendController extends Controller
                 $offlinecount += 1;
             }
         }
-    
+
         $user = Auth::guard('appuser')->user();
         $catactive = $name;
-    
+
         return view('frontend.events', compact(
-            'events', 
-            'category', 
-            'onlinecount', 
-            'offlinecount', 
-            'user', 
-            'catactive', 
-            'previousEvents', 
+            'events',
+            'category',
+            'onlinecount',
+            'offlinecount',
+            'user',
+            'catactive',
+            'previousEvents',
             'upcomingEvents'
         ));
     }
@@ -1995,13 +2047,13 @@ class FrontendController extends Controller
         $timezone = Setting::find(1)->timezone;
         $date = Carbon::now($timezone);
         if ($type == "all") {
-            $events  = Event::with(['category:id,name'])
+            $events = Event::with(['category:id,name'])
                 ->where([['status', 1], ['is_deleted', 0], ['event_status', 'Pending'], ['end_time', '>', $date->format('Y-m-d H:i:s')]])
                 ->orderBy('start_time', 'ASC')->get();
 
             return view('frontend.events', compact('events'));
         } else {
-            $events  = Event::with(['category:id,name'])
+            $events = Event::with(['category:id,name'])
                 ->where([['status', 1], ['is_deleted', 0], ['event_status', 'Pending'], ['type', $type], ['end_time', '>', $date->format('Y-m-d H:i:s')]])
                 ->orderBy('start_time', 'ASC')->get();
             return view('frontend.events', compact('events', 'type'));
@@ -2084,7 +2136,7 @@ class FrontendController extends Controller
         $setting = Setting::first(['app_name', 'logo']);
 
         $data = Blog::find($id);
-       
+
         $data->category = Category::find($data->category_id);
         $tags = explode(',', $data->tags);
         SEOMeta::setTitle($data->title);
@@ -2169,7 +2221,7 @@ class FrontendController extends Controller
 
     public function update_profile()
     {
-        $user =  Auth::guard('appuser')->user();
+        $user = Auth::guard('appuser')->user();
         $phone = Country::get();
         $languages = Language::where('status', 1)->get();
         return view('frontend.user_profile', compact('user', 'languages', 'phone'));
@@ -2178,7 +2230,7 @@ class FrontendController extends Controller
     public function update_user_profile(Request $request)
     {
         $data = $request->all();
-        $user =  Auth::guard('appuser')->user();
+        $user = Auth::guard('appuser')->user();
         $user->update($data);
         $this->setLanguage($user);
         return redirect('/user/profile');
@@ -2456,7 +2508,7 @@ class FrontendController extends Controller
 
         $likedEvents = Event::whereIn('id', array_filter(explode(',', $user->favorite)))->where([['status', 1], ['is_deleted', 0]])->orderBy('id', 'DESC')->get();
         foreach ($likedEvents as $value) {
-            $value->description =  str_replace("&nbsp;", " ", strip_tags($value->description));
+            $value->description = str_replace("&nbsp;", " ", strip_tags($value->description));
             $value->time = $value->start_time->format('d F Y h:i a');
         }
         $likedBlogs = Blog::whereIn('id', array_filter(explode(',', $user->favorite_blog)))->where([['status', 1]])->orderBy('id', 'DESC')->get();
@@ -2478,7 +2530,7 @@ class FrontendController extends Controller
         $review = Review::where('order_id', $order->id)->first();
         return view('frontend.userOrderTicket', compact('order', 'taxes', 'review', 'orderchild'));
     }
-    public function  getOrder($id)
+    public function getOrder($id)
     {
         $data = Order::with(['event:id,name,image,start_time,type,end_time,address', 'ticket:id,ticket_number,name,price,type', 'organization:id,first_name,last_name,image'])->find($id);
         $data->review = Review::where('order_id', $id)->first();
@@ -2522,7 +2574,7 @@ class FrontendController extends Controller
         }
         return redirect('/thank-you');
     }
-    
+
     public function thank_you()
     {
         return view('frontend.thank-you');
@@ -2533,7 +2585,7 @@ class FrontendController extends Controller
         $policy = Setting::find(1)->privacy_policy_organizer;
         return view('frontend.privacy-policy', compact('policy'));
     }
-    
+
     public function landing()
     {
         return view('frontend.landing');
@@ -2546,7 +2598,7 @@ class FrontendController extends Controller
     {
         return view('frontend.how_we_help');
     }
-    
+
     public function about()
     {
         return view('frontend.about');
@@ -2573,7 +2625,7 @@ class FrontendController extends Controller
         }
         $timezone = Setting::find(1)->timezone;
         $date = Carbon::now($timezone);
-        $events  = Event::with(['category:id,name'])
+        $events = Event::with(['category:id,name'])
             ->where([['address', 'LIKE', "%$search%"], ['status', 1], ['is_deleted', 0], ['event_status', 'Pending'], ['end_time', '>', $date->format('Y-m-d')]])
             ->orWhere([['name', 'LIKE', "%$search%"], ['status', 1], ['is_deleted', 0], ['event_status', 'Pending'], ['end_time', '>', $date->format('Y-m-d')]])
             ->orWhere([['description', 'LIKE', "%$search%"], ['status', 1], ['is_deleted', 0], ['event_status', 'Pending'], ['end_time', '>', $date->format('Y-m-d')]]);
@@ -2790,14 +2842,14 @@ class FrontendController extends Controller
         $data['payment_status'] = 1;
         $data['order_status'] = 'Complete';
         $com = Setting::find(1, ['org_commission_type', 'org_commission']);
-        $p =   $request['payment'] - $request['tax'];
+        $p = $request['payment'] - $request['tax'];
         if ($request['payment_type'] == "FREE") {
-            $data['org_commission']  = 0;
+            $data['org_commission'] = 0;
         } else {
             if ($com->org_commission_type == "percentage") {
-                $data['org_commission'] =  $p * $com->org_commission / 100;
+                $data['org_commission'] = $p * $com->org_commission / 100;
             } else if ($com->org_commission_type == "amount") {
-                $data['org_commission']  = $com->org_commission;
+                $data['org_commission'] = $com->org_commission;
             }
         }
 
@@ -2806,8 +2858,8 @@ class FrontendController extends Controller
             $count = $coupon->use_count + 1;
             $coupon->update(['use_count' => $count]);
             CouponUsageHistory::create([
-                'coupon_id'=> $request->coupon_code,
-                'appuser_id'=> $user->id
+                'coupon_id' => $request->coupon_code,
+                'appuser_id' => $user->id
             ]);
             $data['coupon_discount'] = $coupon->discount;
             $data['coupon_id'] = $coupon->id;
@@ -2833,7 +2885,7 @@ class FrontendController extends Controller
             $child['order_id'] = $order->id;
             $child['customer_id'] = Auth::guard('appuser')->user()->id;
             $child['checkin'] = $ticket->maximum_checkins ?? null;
-            $child['paid'] =  1 ;
+            $child['paid'] = 1;
             OrderChild::create($child);
         }
         if (isset($request['tax_data'])) {
@@ -2888,7 +2940,7 @@ class FrontendController extends Controller
         }
 
         // for Organizer notification
-        $org =  User::find($order->organization_id);
+        $org = User::find($order->organization_id);
         $or_message = NotificationTemplate::where('title', 'Organizer Book Ticket')->first()->message_content;
         $or_detail['organizer_name'] = $org->first_name . ' ' . $org->last_name;
         $or_detail['user_name'] = $user->first_name . ' ' . $user->last_name;
@@ -2899,7 +2951,7 @@ class FrontendController extends Controller
         $or_noti_data = ["{{organizer_name}}", "{{user_name}}", "{{quantity}}", "{{event_name}}", "{{date}}", "{{app_name}}"];
         $or_message1 = str_replace($or_noti_data, $or_detail, $or_message);
         $or_notification = array();
-        $or_notification['organizer_id'] =  $org->id;
+        $or_notification['organizer_id'] = $org->id;
         $or_notification['user_id'] = null;
         $or_notification['order_id'] = $order->id;
         $or_notification['title'] = 'New Ticket Booked';
@@ -2933,22 +2985,22 @@ class FrontendController extends Controller
     {
         return redirect()->back();
     }
-    
-    
+
+
     public function leadSubmit(Request $request)
     {
-        
+
         $validated = $request->validate([
-            'name'        => 'required|string|max:255',
-            'email'       => 'required|email',
-            'phone'       => 'required|string|max:20',
-            'event_type'  => 'required|string|max:255',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'phone' => 'required|string|max:20',
+            'event_type' => 'required|string|max:255',
             'requirement' => 'required|string|max:255',
             'description' => 'required|string',
         ]);
-    
+
         WebLead::create($validated);
-    
+
         // Mail::raw(
         //     "New Event Quote Request:\n\n" .
         //     "Name: {$validated['name']}\n" .
@@ -2962,7 +3014,7 @@ class FrontendController extends Controller
         //                 ->subject('New Request');
         //     }
         // );
-    
+
         return redirect()->route('thankyou')->with('status', __('Request has been added successfully.'));
     }
 }

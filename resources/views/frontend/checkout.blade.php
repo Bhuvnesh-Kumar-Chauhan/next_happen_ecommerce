@@ -422,7 +422,7 @@
                                                         <div
                                                             class="border border-gray-light p-5 rounded-lg text-gray-100 w-full font-normal font-poppins text-base leading-6 flex">
                                                             <input id="Razor" required type="radio" value="RAZOR"
-                                                                name="payment_type"
+                                                                name="payment_type" disabled
                                                                 class="h-5 w-5 mr-2 border border-gray-light  hover:border-gray-light focus:outline-none">
                                                             <label for="Razor"><img
                                                                     src="{{ asset('images/payments/razorpay.svg') }}"

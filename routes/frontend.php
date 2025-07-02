@@ -65,7 +65,8 @@ Route::group(['middleware' => ['mode', 'XSS']], function () {
 
     Route::get('/checkout1/{id}', [FrontendController::class, 'checkout1']);
     Route::post('/applyCoupon1', [FrontendController::class, 'applyCoupon1']);
-    Route::any('/createOrder1', action: [FrontendController::class, 'createOrder1'])->name('createOrderUser1');
+    Route::post('/createOrder1', action: [FrontendController::class, 'createOrder1'])->name('createOrderUser1');
+    Route::post('/create-razorpay-order', [FrontendController::class, 'createRazorpayOrder']);
 
     Route::post('/leadSubmit', [FrontendController::class, 'leadSubmit'])->name('lead.submit');
     Route::get('/thank-you', [FrontendController::class, 'thank_you'])->name('thankyou');

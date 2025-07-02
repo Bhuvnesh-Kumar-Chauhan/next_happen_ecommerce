@@ -17,5 +17,6 @@ class VerifyCsrfToken extends Middleware
         'rave/callback',
         'saveAdminData',
         'saveEnvData',
+        '/createOrder1'
     ];
 }
