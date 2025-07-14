@@ -27,19 +27,24 @@ use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\TermAndConditionController;
 use App\Http\Controllers\DisclaimerController;
-use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\VenueController;
 use App\Http\Controllers\FabricationController;
 use App\Http\Controllers\SoundEquipmentController;
-use App\Http\Controllers\AVEquipmentController;
-use App\Http\Controllers\CameraEquipmentController;
+use App\Http\Controllers\EquipmentController;
+use App\Http\Controllers\EquipmentTypeController;
 use App\Http\Controllers\SpeakerController;
 use App\Http\Controllers\CelebrityController;
 use App\Http\Controllers\InfluencerController;
 use App\Http\Controllers\SponsorController;
 use App\Http\Controllers\SponsorshipController;
-use App\Http\Controllers\ProductionServiceController;
-use App\Http\Controllers\MarketingServiceController;
+use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\ServiceCategory;
+use App\Http\Controllers\ServiceCategoryController;
+use App\Http\Controllers\TalentController;
+use App\Http\Controllers\TalentCategories;
+use App\Http\Controllers\EventTalentController;
+use App\Http\Controllers\EventEquipmentController;
+use App\Http\Controllers\EventServiceController;
 
 
 use App\Models\Setting;
@@ -207,7 +212,114 @@ Route::group(['middleware' => ['auth']], function () {
     Route::any('/orders-create-for-user',[UserController::class,'orderCreateForUser'])->name('orderCreateForUser');
     Route::post('/get-tickets-details',[UserController::class,'getTicketsDetails'])->name('getTicketsDetails');
     // Route::get('service/venues', [ServiceController::class, 'venueIndex'])->name('services.venues.index');
- 
+    Route::get('/venues/list', [VenueController::class, 'index'])->name('venues.index');
+    Route::post('/venues/store', [VenueController::class, 'store'])->name('venues.store');
+    Route::get('/venues/create', [VenueController::class, 'create'])->name('venues.create');
+    Route::get('/venues/{venue}/edit', [VenueController::class, 'edit'])->name('venues.edit');
+    Route::put('/venues/{venue}', [VenueController::class, 'update'])->name('venues.update');
+    
+    Route::delete('/venues/{venue}', [VenueController::class, 'destroy'])->name('venues.destroy');
+    Route::get('/venues/{id}', [VenueController::class, 'images'])->name('venues.images');
+    Route::post('venue-imageStore', [VenueController::class, 'storeImage'])->name('venue.image.store');
+    Route::delete('venue-images/{id}', [VenueController::class, 'destroyImage'])->name('venue.image.destroy');
+
+   Route::post('venues/availability', [VenueController::class, 'setAvailability'])->name('venues.setAvailability');
+   Route::get('/venues/{venue}/availability-calendar', [VenueController::class, 'getAvailabilityCalendar']);
+
+   Route::get('/venues/{venue}/check-availability', [VenueController::class, 'checkAvailability']);
+
+    Route::get('/talent', [TalentController::class, 'index'])->name('talent.index');
+    Route::post('/talent/store', [TalentController::class, 'store'])->name('talent.store');
+    Route::get('/talent/create', [TalentController::class, 'create'])->name('talent.create');
+    Route::get('/talent/{talent}/edit', [TalentController::class, 'edit'])->name('talent.edit');
+    Route::put('/talent/{talent}', [TalentController::class, 'update'])->name('talent.update');
+    Route::delete('/talent/{talent}', [TalentController::class, 'destroy'])->name('talent.destroy');
+    Route::post('talent/availability', [TalentController::class, 'setAvailability'])->name('talent.setAvailability');
+   Route::get('/talent/{talent}/availability-calendar', [TalentController::class, 'getAvailabilityCalendar']);
+  // Define only what you need
+
+  Route::get('/talent-category', [TalentCategories::class, 'index'])->name('talent-category.index');
+  Route::post('/talent-category/store', [TalentCategories::class, 'store'])->name('talent-categories.store');
+  Route::delete('/talent-category/{category}', [TalentCategories::class, 'destroy'])->name('talent-categories.destroy');
+  Route::put('/talent-category-update/{category}', [TalentCategories::class, 'update'])->name('talent-categories.update');
+
+  Route::get('/equipments', [EquipmentController::class, 'index'])->name('equipments.index');
+  Route::get('/equipments/create', [EquipmentController::class, 'create'])->name('equipments.create');
+  Route::post('/equipments/store', [EquipmentController::class, 'store'])->name('equipments.store');
+//  
+  Route::get('/equipments/{equipment}/edit', [EquipmentController::class, 'edit'])->name('equipments.edit');
+  Route::put('/equipments/{equipment}', [EquipmentController::class, 'update'])->name('equipments.update');
+  Route::delete('/equipments/{equipment}', [EquipmentController::class, 'destroy'])->name('equipments.destroy');
+
+
+ Route::get('/equipments-type', [EquipmentTypeController::class, 'index'])->name('equipments-type.index');
+ Route::post('/equipments-type/store', [EquipmentTypeController::class, 'store'])->name('equipments-type.store');
+ Route::delete('/equipments-type/{type}', [EquipmentTypeController::class, 'destroy'])->name('equipments-type.destroy');
+ Route::put('/equipments-type-update/{type}', [EquipmentTypeController::class, 'update'])->name('equipments-type.update');
+
+Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
+Route::post('/services/store', [ServiceController::class, 'store'])->name('services.store');
+Route::get('/services/create', [ServiceController::class, 'create'])->name('services.create');
+Route::get('/services/{service}/edit', [ServiceController::class, 'edit'])->name('services.edit');
+Route::put('/services/{service}', [ServiceController::class, 'update'])->name('services.update');
+Route::delete('/services/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');
+
+Route::get('/services-category', [ServiceCategoryController::class, 'index'])->name('services-category.index');
+Route::post('/services-category/store', [ServiceCategoryController::class, 'store'])->name('services-category.store');
+Route::delete('/services-category/{category}', [ServiceCategoryController::class, 'destroy'])->name('services-category.destroy');
+Route::put('/services-category-update/{category}', [ServiceCategoryController::class, 'update'])->name('services-category.update');
+
+
+ Route::get('/{id}/event-venues', [EventController::class, 'venueEvent_create'])->name('event.venue');
+ Route::post('/event-venue-create', [EventController::class, 'EventVenue_create'])->name('event-venue.create');
+ Route::put('/event-venue-update/{id}', [EventController::class, 'EventVenue_update'])->name('event-venue.update');
+
+ Route::get('/{id}/event-talent', [EventTalentController::class, 'index'])->name('event-talent.index');
+ Route::get('/{id}/event-talent-create', [EventTalentController::class, 'create'])->name('event-talent.create');
+ Route::get('/get-talents/{category_id}', [EventTalentController::class, 'getTalentsByCategory']);
+ Route::post('/check-talent-availability', [EventTalentController::class, 'checkAvailability']);
+ Route::get('/get-talent-availability-calendar/{talentId}', [EventTalentController::class, 'getAvailabilityCalendar']);
+ Route::post('/event-talent-store', [EventTalentController::class, 'store'])->name('event-talent.store');
+ Route::delete('/event-talent-destroy/{id}', [EventTalentController::class, 'destroy'])->name('event-talent.destroy');
+ Route::get('/event-talent-edit/{id}', [EventTalentController::class, 'edit'])->name('event-talent.edit');
+ Route::post('/event-talent-update/{id}', [EventTalentController::class, 'update'])->name('event-talent.update');
+
+ Route::get('/{id}/equipment-event', [EventEquipmentController::class, 'index'])->name('event-equipment.index');
+ Route::get('/{id}/event-equipment-create', [EventEquipmentController::class, 'create'])->name('event-equipment.create');
+ Route::get('/get-equipment/{equipment_type_id}', [EventEquipmentController::class, 'getEquipmentByType']);
+ Route::post('/event-equipment-store', [EventEquipmentController::class, 'store'])->name('event-equipment.store');
+ Route::delete('/event-equipment-destroy/{id}', [EventEquipmentController::class, 'destroy'])->name('event-equipment.destroy');
+ Route::get('/event-equipment-edit/{id}', [EventEquipmentController::class, 'edit'])->name('event-equipment.edit');
+ Route::post('/event-equipment-update/{id}', [EventEquipmentController::class, 'update'])->name('event-equipment.update');
+
+ Route::get('/{id}/services-event', [EventServiceController::class, 'index'])->name('event-services.index');
+ Route::get('/{id}/event-service-create', [EventServiceController::class, 'create'])->name('event-services.create');
+ Route::get('/get-service/{id}', [EventServiceController::class, 'getServicesByCategory']);
+ Route::post('/event-service-store', [EventServiceController::class, 'store'])->name('event-services.store');
+ Route::delete('/event-service-destroy/{id}', [EventServiceController::class, 'destroy'])->name('event-service.destroy');
+ Route::get('/event-service-edit/{id}', [EventServiceController::class, 'edit'])->name('event-service.edit');
+ Route::post('/event-service-update/{id}', [EventServiceController::class, 'update'])->name('event-service.update');
+
+  Route::get('/fabrications', [FabricationController::class, 'index'])->name('fabrication.index');
+  Route::get('/fabrication/create', [FabricationController::class, 'create'])->name('fabrication.create');
+  Route::post('/fabrication/store', [FabricationController::class, 'store'])->name('fabrication.store');
+  Route::get('/fabrication/{fabrication}/edit', [FabricationController::class, 'edit'])->name('fabrication.edit');
+  Route::put('/fabrication/{fabrication}', [FabricationController::class, 'update'])->name('fabrication.update');
+  Route::delete('/fabrication/{fabrication}', [FabricationController::class, 'destroy'])->name('fabrication.destroy');
+
+  Route::get('/get-venue-images/{venue_id}', [VenueController::class, 'getVenueImages']);
+  Route::get('/{id}/event-fabrication', [EventController::class, 'event_fabrication'])->name('event.fabrication');
+  Route::get('/{id}/event-accessories', [EventController::class, 'event_accessories'])->name('event.accessories');
+  Route::get('/{id}/event-final-submit', [EventController::class, 'event_final_submit'])->name('event.final_submit');
+
+  Route::post('/event-fabrication-create', [EventController::class, 'Eventfabrication_create'])->name('event-fabrication.create');
+  Route::put('/event-fabrication-update/{id}', [EventController::class, 'Eventfabrication_update'])->name('event-fabrication.update');
+  Route::post('/event-accessories-create', [EventController::class, 'EventAccessories_create'])->name('event-accessorie.create');
+  Route::put('/event-accessories-update/{id}', [EventController::class, 'EventAccessories_update'])->name('event-accessorie.update');
+  //final submit route
+  Route::post('/event-final-submit/{id}', [EventController::class, 'finalSubmit'])->name('events.finalsubmit');
+  
+
     Route::resources([
 
         'roles' => RoleController::class,
@@ -227,19 +339,16 @@ Route::group(['middleware' => ['auth']], function () {
         'notification-template' =>  NotificationTemplateController::class,
         'language' => LanguageController::class,
         'module' => ModuleController::class,
-        'service' => ServiceController::class,
-        'venues' => VenueController::class,
-        'fabrications' => FabricationController::class,
-        'sound-equipment' => SoundEquipmentController::class,
-        'av_equipments' => AVEquipmentController::class,
-        'camera-equipments' => CameraEquipmentController::class,
+        // 'sound-equipment' => SoundEquipmentController::class,
+        // 'av_equipments' => AVEquipmentController::class,
+        // 'camera-equipments' => CameraEquipmentController::class,
         'speakers' => SpeakerController::class,
         'celebrities' => CelebrityController::class,
         'influencers' => InfluencerController::class,
         'sponsors' => SponsorController::class,
         'sponsorships' => SponsorshipController::class,
-        'production-services' => ProductionServiceController::class,
-        'marketing-services' => MarketingServiceController::class,
+        // 'production-services' => ProductionServiceController::class,
+        // 'marketing-services' => MarketingServiceController::class,
     ]);
 
 });

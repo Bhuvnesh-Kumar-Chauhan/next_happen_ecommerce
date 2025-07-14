@@ -1,8 +1,6 @@
 <?php
 
 use App\Http\Controllers\FrontendController;
-use App\Http\Controllers\ImageController;
-use App\Http\Controllers\S3ImageController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LicenseController;
 use GuzzleHttp\Middleware;
@@ -15,34 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
 
-
-
 Route::group(['middleware' => ['mode', 'XSS']], function () {
-
-
-    Route::get('/upload', 'UploadController@showForm');
-    Route::post('/upload/initiate', 'UploadController@initiate');
-    Route::post('/upload/complete', 'UploadController@complete');
-
-
-    Route::controller(ImageController::class)->group(function () {
-
-        Route::get('/s3-images', 'index')->name('images.index');
-
-        Route::get('/s3-images/create', 'create')->name('images.create');
-
-        Route::post('/s3-images/store', 'store')->name('images.store');
-
-        Route::get('s3-images/show/{path}', [ImageController::class, 'show'])->where('path', '.*')->name('images.show');
-
-        Route::get('s3-images/edit/{path}', [ImageController::class, 'edit'])->where('path', '.*')->name('images.edit');
-
-        Route::put('s3-images/update/{path}', [ImageController::class, 'update'])->where('path', '.*')->name('images.update');
-
-        Route::delete('s3-images/delete/{path}', [ImageController::class, 'destroy'])->where('path', '.*')->name('images.destroy');
-
-    });
-
 
 
     Route::view('/account-setup', 'frontend.auth.account-setup');
@@ -62,12 +33,15 @@ Route::group(['middleware' => ['mode', 'XSS']], function () {
     Route::get('organizer/VerificationConfirm/{id}', [FrontendController::class, 'LoginByMailOrganizer']);
     Route::get('organizer/otp-verify/{userid}', [FrontendController::class, 'otpViewOrganizer']);
     Route::post('organizer/otp-verify', [FrontendController::class, 'otpVerifyOrganizer']);
-
+    
     Route::get('/checkout1/{id}', [FrontendController::class, 'checkout1']);
+   
     Route::post('/applyCoupon1', [FrontendController::class, 'applyCoupon1']);
-    Route::post('/createOrder1', action: [FrontendController::class, 'createOrder1'])->name('createOrderUser1');
+    Route::post('/createOrder1', [FrontendController::class, 'createOrder1']);
     Route::post('/create-razorpay-order', [FrontendController::class, 'createRazorpayOrder']);
 
+    
+    
     Route::post('/leadSubmit', [FrontendController::class, 'leadSubmit'])->name('lead.submit');
     Route::get('/thank-you', [FrontendController::class, 'thank_you'])->name('thankyou');
 
@@ -85,7 +59,7 @@ Route::group(['middleware' => ['mode', 'XSS']], function () {
         Route::get('/org-register', [FrontendController::class, 'orgRegister']);
         Route::post('/org-register', [FrontendController::class, 'organizerRegister']);
         Route::get('/logout', [LicenseController::class, 'adminLogout']);
-        Route::get('/logoutuser', [FrontendController::class, 'userLogout'])->name('logoutUser');
+        Route::get('/logoutuser', [FrontendController::class, 'userLogout']);
         Route::post('/search_event', [FrontendController::class, 'searchEvent']);
         Route::get('/tag/{tagname}', [FrontendController::class, 'eventsByTag']);
         Route::get('/blog-tag/{tagname}', [FrontendController::class, 'blogByTag']);
@@ -94,9 +68,9 @@ Route::group(['middleware' => ['mode', 'XSS']], function () {
         Route::get('/stripe/success', [FrontendController::class, 'stripeSuccess'])->name('stripe.success');
         Route::get('/stripe/cancel', [FrontendController::class, 'striepCancel'])->name('stripe.cancel');
     });
-
-
-
+    
+    
+    
     Route::group(['middleware' => 'checkStatus'], function () {
         Route::get('/all-events', [FrontendController::class, 'allEvents']);
         Route::post('/all-events', [FrontendController::class, 'allEvents']);
@@ -141,7 +115,7 @@ Route::group(['middleware' => ['mode', 'XSS']], function () {
                 Route::get('/wallet', [WalletController::class, 'wallet'])->name('myWallet');
                 Route::get('/wallet/add-money', [WalletController::class, 'addToWallet'])->name('addToWallet');
                 Route::post('/deposite', [WalletController::class, 'deposite'])->name('deposite');
-                Route::any('/wallet/stripe/create-session', [WalletController::class, 'checkoutSession'])->name('stripe.checkoutSession');
+                Route::any('/wallet/stripe/create-session', [WalletController::class, 'checkoutSession']);
                 Route::get('/wallet/stripe/success', [WalletController::class, 'stripeSuccess'])->name('walletStripe.success');
                 Route::get('/wallet/stripe/cancel', [WalletController::class, 'striepCancel'])->name('walletStripe.cancel');
             });

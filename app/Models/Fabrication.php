@@ -13,24 +13,25 @@ class Fabrication extends Model
     protected $table = "fabrications";
 
     protected $fillable = [
-        'service_id',
-        'stage_with_grey_carpet',
-        'stage_skirting',
-        'console_masking',
-        'standees',
-        'selfie_point',
-        'digital_podium_with_mic',
-        'stairs',
-        'side_flex',
-        'main_flex',
-        'led_letters',
-        'length_in_feet',
-        'width_in_feet',
+        'fabrication_type',
+        'name',
+        'description',
+        'images',
+        'status',
     ];
 
-    public function service()
+    public function usedAsTableclothInEvents()
     {
-        return $this->belongsTo(Service::class);
+        return $this->hasMany(EventFabrication::class, 'tablecloths');
     }
+    public function usedAsDrapesStyleInEvents()
+    {
+        return $this->hasMany(EventFabrication::class, 'drapes_style');
+    }
+    public function usedAsFabricTypeInEvents()
+    {
+        return $this->hasMany(EventFabrication::class, 'fabric_type');
+    }
+    
 }
 

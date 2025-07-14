@@ -18,3 +18,4 @@ public/images/upload
 .env
 /Modules
 public/modules
+public/ticket.pdf

@@ -63,18 +63,6 @@
         justify-content: center;
         background: #fff;
     }
-
-
-    @media only screen and (max-width: 600px) {
-
-        .slider-container {
-            height: 200px !important;
-        }
-        .slide img {
-            object-fit: cover !important;
-        }
-     }
-
     @media (max-width: 920px) {
         .slider-container {
             position: relative;
@@ -459,7 +447,20 @@
             class=" grid gap-x-7 3xl:grid-cols-4 xl:grid-cols-4 xlg:grid-cols-2 xxmd:grid-cols-2 xxmd:gap-y-7 xmd:gap-y-7 xxsm:gap-y-7 sm:grid-cols-1 sm:gap-y-7 msm:grid-cols-1 xxsm:grid-cols-1 justify-between pt-5">
             @foreach ($events as $item)
             <div class="shadow-lg p-5 rounded-lg bg-white hover:scale-110 transition-all duration-500 cursor-pointer">
-                
+                <!--<a href="{{ url('event/' . $item->id . '/' . Str::slug($item->name)) }}">-->
+                <!--    <img src="{{ url('images/upload/' . $item->image) }}" alt=""-->
+                <!--        class="h-40 rounded-lg w-full object-cover bg-cover ">-->
+                <!--    <p class="font-popping font-semibold text-xl leading-8 pt-2">{{ $item->name }}-->
+                <!--    </p>-->
+                <!--    <p class="font-poppins  font-normal text-base leading-6 text-gray pt-1">-->
+                <!--        @if (Carbon\Carbon::parse($item->start_time)->format('d M Y') === Carbon\Carbon::parse($item->end_time)->format('d M Y'))-->
+                <!--            {{ Carbon\Carbon::parse($item->start_time)->format('d M Y') }}-->
+                <!--        @else-->
+                <!--            {{ Carbon\Carbon::parse($item->start_time)->format('d M Y') }} - {{ Carbon\Carbon::parse($item->end_time)->format('d M Y') }}-->
+                <!--        @endif-->
+
+                <!--    </p>-->
+                <!--</a>-->
                 @php
                     $firstMedia = null;
                 

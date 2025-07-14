@@ -5,13 +5,36 @@
         @include('admin.layout.breadcrumbs', [
             'title' => __('Fabrications'),
         ])
-
+    <style>
+    button, .button-class, .icon-wrapper {
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            }
+            div, td, span {
+            border: none !important;
+            }
+        .btn-icon {
+            border: none; 
+            outline: none;  
+            background-color: transparent; 
+        }
+    </style>
         <div class="section-body">
             <div class="row">
                 <div class="col-12">
-                    @if (session('status'))
+                     @if(session('success'))
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            {{ session('status') }}
+                            {{ session('success') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
+
+                    @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -28,7 +51,7 @@
                                 <div class="col-lg-4 text-right">
                                     @can('fabrication_create')
                                         <button class="btn btn-primary add-button">
-                                            <a href="{{ route('fabrications.create') }}">
+                                            <a href="{{ route('fabrication.create') }}">
                                                 <i class="fas fa-plus"></i> {{ __('Add New Fabrication') }}
                                             </a>
                                         </button>
@@ -39,11 +62,9 @@
                                 <table class="table" id="report_table">
                                     <thead>
                                         <tr>
-                                            <th>{{ __('Title') }}</th>
-                                            <th>{{ __('Category') }}</th>
-                                            <th>{{ __('Details') }}</th>
-                                            <th>{{ __('Size') }}</th>
-                                            <th>{{ __('Service Type') }}</th>
+                                             <th>{{ __('Image') }}</th>
+                                            <th>{{ __('Fabrication Type') }}</th>
+                                            <th>{{ __('Fabrication Name') }}</th>
                                             <th>{{ __('Status') }}</th>
                                             @if (Gate::check('fabrication_edit') || Gate::check('fabrication_delete'))
                                                 <th>{{ __('Action') }}</th>
@@ -53,38 +74,31 @@
                                     <tbody>
                                         @foreach ($fabrications as $fabrication)
                                             <tr>
-                                                <td>{{ $fabrication->title }}</td>
-                                                <td>{{ $fabrication->category }}</td>
-                                                <td>{{ $fabrication->details }}</td>
                                                 <td>
-                                                    {{ $fabrication->length }}ft x {{ $fabrication->width }}ft
+                                                     <img src="{{ asset('storage/'.$fabrication->images) }}" alt="Talent Image"  style="width: 80px; height: 80px; object-fit: cover;">
                                                 </td>
-                                                <td>{{ $fabrication->service->name ?? '-' }}</td>
+                                                <td>{{ $fabrication->fabrication_type }}</td>
+                                                <td>{{ $fabrication->name ?? '-' }}</td>
                                                 <td>
-                                                    @if($fabrication->is_active)
+                                                    @if($fabrication->status)
                                                         <span class="badge bg-success">Active</span>
                                                     @else
                                                         <span class="badge bg-secondary">Inactive</span>
                                                     @endif
                                                 </td>
-                                                @if (Gate::check('fabrication_edit') || Gate::check('fabrication_delete'))
-                                                    <td>
-                                                        @can('fabrication_edit')
-                                                            <a href="{{ route('fabrications.edit', $fabrication->id) }}" class="btn-icon">
-                                                                <i class="fas fa-edit"></i>
-                                                            </a>
-                                                        @endcan
-                                                        @can('fabrication_delete')
-                                                            <form action="{{ route('fabrications.destroy', $fabrication->id) }}" method="POST" style="display: inline;">
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button type="submit" class="btn-icon" onclick="return confirm('Are you sure you want to delete this fabrication item?')">
-                                                                    <i class="fas fa-trash"></i>
-                                                                </button>
-                                                            </form>
-                                                        @endcan
-                                                    </td>
-                                                @endif
+                                                <td>
+                                                        <a href="{{ route('fabrication.edit', $fabrication->id) }}" class="btn-icon">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <form action="{{ route('fabrication.destroy', $fabrication->id) }}" method="POST" style="display: inline;">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn-icon" onclick="return confirm('Are you sure you want to delete this fabrication item?')">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                </td>
+                                              
                                             </tr>
                                         @endforeach
                                     </tbody>

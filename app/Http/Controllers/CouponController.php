@@ -37,9 +37,33 @@ class CouponController extends Controller
         return view('admin.coupon.create', compact('event'));
     }
 
+    // public function store(Request $request)
+    // {
+    //     $request->validate([
+    //         'coupon_code' => 'bail|required|unique:coupon,coupon_code',
+    //         'name' => 'bail|required',
+    //         'event_id' => 'bail|required',
+    //         'discount' => 'bail|required',
+    //         'discount_type'=>'bail|required',
+    //         'start_date' => 'bail|required',
+    //         'end_date' => 'bail|required',
+    //         'max_use' => 'bail|required',
+    //         'description' => 'bail|required',
+    //         'minimum_amount'=> 'bail|required',
+    //         'maximum_discount' => 'bail|required',
+    //         'max_use_per_user' => 'bail|required'
+    //     ]);
+    //     $data = $request->all();
+    //     $data['coupon_code'] =  chr(rand(65,90)).chr(rand(65,90)).'-'.rand(9999,100000);
+    //     $data['user_id']= Event::find($request->event_id)->user_id;
+
+    //     Coupon::create( $data);
+    //     return redirect()->route('coupon.index')->withStatus(__('Coupon has added successfully.'));
+    // }
     public function store(Request $request)
     {
         $request->validate([
+            'coupon_code' => 'bail|required|unique:coupon,coupon_code',
             'name' => 'bail|required',
             'event_id' => 'bail|required',
             'discount' => 'bail|required',
@@ -52,12 +76,13 @@ class CouponController extends Controller
             'maximum_discount' => 'bail|required',
             'max_use_per_user' => 'bail|required'
         ]);
-        $data = $request->all();
-        $data['coupon_code'] =  chr(rand(65,90)).chr(rand(65,90)).'-'.rand(9999,100000);
-        $data['user_id']= Event::find($request->event_id)->user_id;
 
-        Coupon::create( $data);
-        return redirect()->route('coupon.index')->withStatus(__('Coupon has added successfully.'));
+        $data = $request->all();
+        $data['user_id'] = Event::find($request->event_id)->user_id;
+
+        Coupon::create($data);
+        
+        return redirect()->route('coupon.index')->withStatus(__('Coupon has been added successfully.'));
     }
 
     public function edit(Coupon $coupon)
@@ -75,22 +100,26 @@ class CouponController extends Controller
     public function update(Request $request, Coupon $coupon)
     {
         $request->validate([
+            'coupon_code' => 'bail|required|unique:coupon,coupon_code,'.$coupon->id,
             'name' => 'bail|required',
             'event_id' => 'bail|required',
             'discount' => 'bail|required',
+            'discount_type' => 'bail|required',
             'start_date' => 'bail|required',
             'end_date' => 'bail|required',
             'max_use' => 'bail|required',
             'description' => 'bail|required',
-            'minimum_amount'=> 'bail|required',
+            'minimum_amount' => 'bail|required',
             'maximum_discount' => 'bail|required',
             'max_use_per_user' => 'bail|required'
         ]);
-        $data = $request->all();
-        $data['user_id']= Event::find($request->event_id)->user_id;
 
-        Coupon::find($coupon->id)->update($data);
-        return redirect()->route('coupon.index')->withStatus(__('Coupon has update successfully.'));
+        $data = $request->all();
+        $data['user_id'] = Event::find($request->event_id)->user_id;
+
+        $coupon->update($data);
+        
+        return redirect()->route('coupon.index')->withStatus(__('Coupon has been updated successfully.'));
     }
 
     public function destroy(Coupon $coupon)

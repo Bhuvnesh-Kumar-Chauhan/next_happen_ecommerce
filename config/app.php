@@ -39,7 +39,7 @@ return [
     |
     */
 
-    'debug' => (bool) env('APP_DEBUG', true),
+    'debug' => env('APP_DEBUG', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -52,7 +52,8 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'https://nexthappen.com/'),
+    // 'url' => env('APP_URL', 'https://nexthappen.com/'),
+    'url' => env('APP_URL', 'http://127.0.0.1:8000'),
 
     'asset_url' => env('ASSET_URL', null),
 

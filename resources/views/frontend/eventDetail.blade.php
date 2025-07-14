@@ -124,9 +124,9 @@
                                     
                                     <a href="{{ $url }}" target="_blank" rel="noopener noreferrer">
                                         @if ($isImage)
-                                            <img src="{{ asset($mediaPath) }}" alt="Event Image" class="w-full  object-cover rounded-lg" style=" object-fit: fill;height: 100%; ">
+                                            <img src="{{ asset($mediaPath) }}" alt="Event Image" class="w-full  object-cover rounded-lg" style=" object-fit: fill;height: 100%;">
                                         @elseif ($isVideo)
-                                            <video controls class="w-full  object-cover rounded-lg" style=" object-fit: fill;height: 100%; ">
+                                            <video controls class="w-full  object-cover rounded-lg">
                                                 <source src="{{ asset($mediaPath) }}" type="video/mp4">
                                                 Your browser does not support the video tag.
                                             </video>

@@ -8,7 +8,6 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use App\Models\Category;
-use App\Services\S3Service;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,9 +19,6 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         //
-        $this->app->singleton(S3Service::class, function ($app) {
-            return new S3Service();
-        });
     }
 
     /**

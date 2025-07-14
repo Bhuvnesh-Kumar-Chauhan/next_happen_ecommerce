@@ -164,7 +164,7 @@
             display: flex;
             justify-content: center;
             width: 100%;
-            position: sticky;
+            position: fixed;
             bottom: 0;
             left: 0;
             background: rgba(255,255,255,0.9);
@@ -282,10 +282,10 @@
         <!-- Event Info -->
         <div class="event-info">
             <h2>{{ $data->name }}</h2>
-            <div class="event-date">
+            {{-- <div class="event-date">
                 {{ Carbon\Carbon::parse($data->start_date)->format('D d M') }} | 
                 {{ Carbon\Carbon::parse($data->start_time)->format('h:i A') }}
-            </div>
+            </div> --}}
         </div>
         
         <!-- Main Content -->

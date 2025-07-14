@@ -22,6 +22,16 @@
                             <form method="post" action="{{ url('coupon/' . $coupon->id) }}" enctype="multipart/form-data">
                                 @csrf
                                 @method('PUT')
+
+                                <div class="form-group">
+                                        <label>{{ __('Coupon Code') }}</label>
+                                        <input type="text" name="coupon_code" placeholder="{{ __('Coupon Code') }}"
+                                             value="{{ $coupon->coupon_code }}"
+                                            class="form-control @error('coupon_code')? is-invalid @enderror">
+                                        @error('coupon_code')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                 </div>
                                 <div class="row">
                                     <div class="col-lg-6">
                                         <div class="form-group">

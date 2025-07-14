@@ -505,12 +505,54 @@ $(document).ready(function () {
                 $("#form_submit").attr("disabled", true);
                 $("#paypal-button-container").show();
             } else if (razorRadio && razorRadio.checked) {
+                // $(".ticket_date").html("");
+                // $("#stripeform").hide();
+                // $("#form_submit").hide();
+                // $("#paypal-button-container").hide();
+                // var requestData = {
+                //     payment: $("#payment").val(),
+                //     payment_type: "RAZORPAY",
+                //     ticket_id: $("#ticket_id").val(),
+                //     coupon_code: $("#coupon_id").val(),
+                //     tax: $("#tax_total").val(),
+                //     quantity: $("#quantity").val(),
+                //     ticket_date: $("#onetime").val(),
+                //     selectedSeats: $("#selectedSeats").val(),
+                //     selectedSeatsId: $("#selectedSeatsId").val(),
+                //     name: $("input[name=name]").val(),
+                //     email: $("input[name=email]").val(),
+                //     phone: $("input[name=phone]").val(),
+                //     gst_number: $("input[name=gst_number]").val(),
+                // };
+                
+                // console.log(requestData);
+                // var razorpayOptions = {
+                //     key: $("#razor_key").val(),
+                //     amount: $("#payment").val() * 100,
+                //     name: "CodesCompanion",
+                //     description: "test",
+                //     capture: true,
+                //     image: "https://i.imgur.com/n5tjHFD.png",
+                //     handler: demoSuccessHandler,
+                //     modal: {
+                //         ondismiss: function () {
+                           
+                //             alert("Payment not completed. Reloading page...");
+                //             location.reload();
+                //         }
+                //     }
+                // };
+
+                // window.r = new Razorpay(razorpayOptions);
+                // r.open();
+                
                 $.ajax({
                     headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
                     url: "/create-razorpay-order",
                     type: "POST",
                     data: { amount: $("#payment").val() },
                     success: function (data) {
+                        console.log(data);
                         var options = {
                             key: $("#razor_key").val(),
                             amount: data.amount,
@@ -535,46 +577,6 @@ $(document).ready(function () {
                         rzp.open();
                     }
                 });
-                // $(".ticket_date").html("");
-                // $("#stripeform").hide();
-                // $("#form_submit").hide();
-                // $("#paypal-button-container").hide();
-                // var requestData = {
-                //     payment: $("#payment").val(),
-                //     payment_type: "RAZORPAY",
-                //     ticket_id: $("#ticket_id").val(),
-                //     coupon_code: $("#coupon_id").val(),
-                //     tax: $("#tax_total").val(),
-                //     quantity: $("#quantity").val(),
-                //     ticket_date: $("#onetime").val(),
-                //     selectedSeats: $("#selectedSeats").val(),
-                //     selectedSeatsId: $("#selectedSeatsId").val(),
-                //     name: $("input[name=name]").val(),
-                //     email: $("input[name=email]").val(),
-                //     phone: $("input[name=phone]").val(),
-                //     gst_number: $("input[name=gst_number]").val(),
-                // };
-
-                // console.log(requestData);
-                // var razorpayOptions = {
-                //     key: $("#razor_key").val(),
-                //     amount: $("#payment").val() * 100,
-                //     currency: "INR",
-                //     name: "CodesCompanion",
-                //     description: "test",
-                //     capture: true,
-                //     image: "https://i.imgur.com/n5tjHFD.png",
-                //     handler: demoSuccessHandler,
-                //     modal: {
-                //         ondismiss: function () {
-                //             alert("Payment not completed. Reloading page...");
-                //             location.reload(); 
-                //         }
-                //     }
-                // };
-
-                // window.r = new Razorpay(razorpayOptions);
-                // r.open();
             } else if (flutterRadio && flutterRadio.checked) {
                 FlutterwaveCheckout({
                     public_key: $("input[name=flutterwave_key]").val(),
@@ -954,7 +956,7 @@ function addFavorite(id, type) {
 //         headers: {
 //             "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
 //         },
-//         url: "/createOrder1",
+//         url: "createOrder1",
 //         type: "POST",
 //         data: requestData,
 
@@ -981,6 +983,7 @@ function addFavorite(id, type) {
 //         },
 //     });
 // }
+
 function demoSuccessHandler(response, razorpay_order_id) {
     $("#payment_token").val(response.razorpay_payment_id);
 

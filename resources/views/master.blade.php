@@ -31,7 +31,7 @@
     <!-- Template CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.7/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.css">
-    <link href="https://cdn.datatables.net/select/1.3.1/css/select.dataTables.min.css" rel="stylesheet" />
+    {{-- <link href="https://cdn.datatables.net/select/1.3.1/css/select.dataTables.min.css" rel="stylesheet" /> --}}
 
     <link rel="stylesheet" href="{{ url('admin/css/style.css') }}">
     <link rel="stylesheet" href="{{ url('admin/css/components.css') }}">

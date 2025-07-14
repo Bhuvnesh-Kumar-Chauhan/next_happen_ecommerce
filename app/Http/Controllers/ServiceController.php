@@ -2,78 +2,99 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Service;
+use App\Models\Services;
+use App\Models\ServiceCategory;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 
 class ServiceController extends Controller
 {
     public function index()
     {
-        abort_if(Gate::denies('service_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-        $services = Service::latest()->paginate(10);
-        return view('admin.services.index', compact('services'));
+        $services = Services::all();
+        $ServiceCategories = ServiceCategory::all();
+        return view('admin.services.index', compact('services', 'ServiceCategories'));
     }
 
     public function create()
     {
-        abort_if(Gate::denies('service_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-        return view('admin.services.create');
+        $ServiceCategories = ServiceCategory::all();
+        return view('admin.services.create', compact('ServiceCategories'));
     }
 
-    public function store(Request $request)
+   public function store(Request $request)
     {
-        $request->merge([
-            'is_active' => $request->has('is_active') ? 1 : 0
-        ]);
-
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'is_active' => 'boolean',
+          
+            'name' => [
+                'bail',
+                'required',
+                Rule::unique('services')->where(function ($query) use ($request) {
+                    return $query->where('service_category_id', $request->service_category_id);
+                })
+            ],
+            'service_category_id' => 'bail|required|exists:service_categories,id',
+            'price' => 'bail|required|numeric|min:0',
+            'offered_price' => 'required|numeric|min:0|lte:price',
+            'is_active' => 'sometimes|boolean'
+        ],
+            [
+            'name.unique' => 'This Service name already exists for the selected Service Category. Please choose a different name or change the Service Category.',
+            'offered_price.lte' => 'Offered price must be less than or equal to regular price.',
+            'service_category_id.exists' => 'The selected Service category is invalid.'
         ]);
 
-        Service::create($validated);
-
-        return redirect()->route('service.index')->with('status', __('Service created successfully'));
+        $service = Services::create($validated);
+        return redirect()
+            ->route('services.index')
+            ->with('success', 'Service Created Successfully!');
     }
 
-    public function show(Service $service)
+   public function edit(Services $service)
     {
-        return view('admin.services.show', compact('service'));
+        $ServiceCategories = ServiceCategory::all();
+        return view('admin.services.edit', compact('service', 'ServiceCategories'));
     }
 
-    public function edit(Service $service)
+    public function update(Request $request, Services $service)
     {
-        abort_if(Gate::denies('service_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
- 
-        return view('admin.services.edit', compact('service'));
+       $validated = $request->validate([
+          
+            'name' => [
+                'bail',
+                'required',
+                Rule::unique('services')->where(function ($query) use ($request) {
+                    return $query->where('service_category_id', $request->service_category_id);
+                })
+                ->ignore($service->id)
+            ],
+            'service_category_id' => 'bail|required|exists:service_categories,id',
+            'price' => 'bail|required|numeric|min:0',
+            'offered_price' => 'required|numeric|min:0|lte:price',
+            'is_active' => 'sometimes|boolean'
+            ],
+                [
+                'name.unique' => 'This Service name already exists for the selected Service Category. Please choose a different name or change the Service Category.',
+                'offered_price.lte' => 'Offered price must be less than or equal to regular price.',
+                'service_category_id.exists' => 'The selected Service category is invalid.'
+            ]);
+
+       $service->update($validated);
+       return redirect()
+            ->route('services.index')
+            ->with('success', 'Service Updated Successfully!');
+
     }
 
-    public function update(Request $request, Service $service)
-    {
-        $request->merge([
-            'is_active' => $request->has('is_active') ? 1 : 0
-        ]);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'is_active' => 'boolean',
-            
-        ]);
-
-        $service->update($validated);
-
-        return redirect()->route('service.index')->with('status', __('Service updated successfully'));
-    }
-
-    public function destroy(Service $service)
+     public function destroy(Services $service)
     {
         $service->delete();
-        return redirect()->route('service.index')->withStatus(__('Service deleted successfully'));
+
+        return redirect()->route('services.index')->with('success', 'Service deleted successfully!');
     }
     
     

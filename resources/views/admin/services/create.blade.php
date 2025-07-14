@@ -19,49 +19,59 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-body">
-                            <form method="post" action="{{ url('service') }}" enctype="multipart/form-data">
+                            <form action="{{ route('services.store') }}" method="POST">
                                 @csrf
 
+                                <div class="form-group">
+                                    <label for="name">{{ __('Service Name') }}</label>
+                                    <input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror" required value="{{ old('name') }}">
+                                    @error('name')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="service_category_id">{{ __('Service Category') }}</label>
+                                    <select name="service_category_id" id="service_category_id" class="form-control @error('service_category_id') is-invalid @enderror" required>
+                                        <option value="">-- Select Service Category --</option>
+                                        @foreach ($ServiceCategories as $category)
+                                            <option value="{{ $category->id }}" {{ old('service_category_id') == $category->id ? 'selected' : '' }}>
+                                                {{ $category->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('service_category_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
                                 <div class="row">
-                                    <div class="col-lg-12">
+                                    <div class="col-md-6">
                                         <div class="form-group">
-                                            <label>{{ __('Name') }}</label>
-                                            <input type="text" name="name" placeholder="{{ __('Name') }}"
-                                                value="{{ old('name') }}"
-                                                class="form-control @error('name')? is-invalid @enderror">
-                                            @error('name')
+                                            <label for="price">{{ __('Price') }}</label>
+                                            <input type="number" id="price" name="price" class="form-control @error('price') is-invalid @enderror" required value="{{ old('price') }}">
+                                            @error('price')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
-                                        
+                                    </div>
+                                    <div class="col-md-6">
                                         <div class="form-group">
-                                            <label for="description">Description</label>
-                                            <textarea name="description" id="description" 
-                                                      class="form-control @error('description') is-invalid @enderror" 
-                                                      rows="3">{{ old('description', $service->description ?? '') }}</textarea>
-                                            @error('description')
-                                                <span class="invalid-feedback" role="alert">
-                                                    <strong>{{ $message }}</strong>
-                                                </span>
+                                            <label for="offered_price">{{ __('Offered Price') }}</label>
+                                            <input type="number" id="offered_price" name="offered_price" class="form-control @error('offered_price') is-invalid @enderror" required value="{{ old('offered_price') }}">
+                                            @error('offered_price')
+                                                <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
-                                        
-                                        <div class="form-group">
-                                            <div class="form-check">
-                                                <input type="checkbox" name="is_active" id="is_active" 
-                                                       class="form-check-input" 
-                                                       {{ old('is_active', $service->is_active ?? true) ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="is_active">Active Service</label>
-                                            </div>
-                                        </div>
-                                        
-                                        
                                     </div>
                                 </div>
 
                                 <div class="form-group">
-                                    <button type="submit" class="btn btn-primary demo-button">{{ __('Submit') }}</button>
+                                    <label for="is_active">{{ __('Is Active?') }}</label>
+                                    <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}>
                                 </div>
+
+                                <button type="submit" class="btn btn-primary">{{ __('Save Service') }}</button>
                             </form>
                         </div>
                     </div>

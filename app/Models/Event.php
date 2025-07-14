@@ -35,12 +35,14 @@ class Event extends Model
         'subcategory_id',
         'label_id',
         'urls',
+        'final_submit'
     ];
     
 
     protected $table = 'events';
     protected $dates = ['start_time', 'end_time'];
     protected $appends = ['imagePath', 'rate', 'totalTickets', 'soldTickets'];
+    
 
 
 
@@ -52,11 +54,14 @@ class Event extends Model
     public function category()
     {
         return $this->hasOne('App\Models\Category', 'id', 'category_id');
+        // return $this->belongsTo(Category::class);
+        
     }
 
     public function subcategory()
     {
         return $this->belongsTo(SubCategory::class);
+        // return $this->belongsToMany(Subcategory::class);
     }
 
     public function organization()

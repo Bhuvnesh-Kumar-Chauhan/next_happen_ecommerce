@@ -13,78 +13,76 @@ class FabricationController extends Controller
 {
     public function index()
     {
-        abort_if(Gate::denies('fabrication_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-        $fabrications = Fabrication::with('service')->latest()->get();
-        return view('admin.fabrication.index', compact('fabrications'));
+        $fabrications = Fabrication::all();
+        return view('admin.fabrication.index',compact('fabrications'));
     }
 
     public function create()
-    {
-        abort_if(Gate::denies('fabrication_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-        $services = Service::all();
-        return view('admin.fabrication.create', compact('services'));
+    { 
+        return view('admin.fabrication.create');
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'service_id' => 'required|exists:services,id',
-            'stage_with_grey_carpet' => 'nullable|string',
-            'stage_skirting' => 'nullable|string',
-            'console_masking' => 'nullable|string',
-            'standees' => 'nullable|string',
-            'selfie_point' => 'nullable|string',
-            'digital_podium_with_mic' => 'nullable|string',
-            'stairs' => 'nullable|string',
-            'side_flex' => 'nullable|string',
-            'main_flex' => 'nullable|string',
-            'led_letters' => 'nullable|string',
-            'length_in_feet' => 'nullable|numeric',
-            'width_in_feet' => 'nullable|numeric',
+            'fabrication_type' => 'required',
+            'name' => 'required',
+            'description' => 'required',
+            'images' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Changed to single image
+            'status' => 'nullable',
         ]);
+
+        if ($request->hasFile('images')) {
+            $path = $request->file('images')->store('fabrication_images', 'public');
+            $data['images'] = $path; 
+        }
 
         Fabrication::create($data);
 
         return redirect()->route('fabrication.index')->with('status', 'Fabrication added successfully!');
     }
 
-    public function show(Fabrication $fabrication)
+    public function edit($id)
     {
-        return view('admin.fabrication.show', compact('service'));
+         $fabrication = Fabrication::findOrFail($id);
+        
+        return view('admin.fabrication.edit', compact('fabrication'));
     }
-    public function edit(Fabrication $fabrication)
+   public function update(Request $request, Fabrication $fabrication)
     {
-        abort_if(Gate::denies('fabrication_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-        $services = Service::all();
-        return view('admin.fabrication.edit', compact('fabrication', 'services'));
-    }
-
-    public function update(Request $request, Fabrication $fabrication)
-    {
-        $data = $request->validate([
-            'service_id' => 'required|exists:services,id',
-            'stage_with_grey_carpet' => 'nullable|string',
-            'stage_skirting' => 'nullable|string',
-            'console_masking' => 'nullable|string',
-            'standees' => 'nullable|string',
-            'selfie_point' => 'nullable|string',
-            'digital_podium_with_mic' => 'nullable|string',
-            'stairs' => 'nullable|string',
-            'side_flex' => 'nullable|string',
-            'main_flex' => 'nullable|string',
-            'led_letters' => 'nullable|string',
-            'length_in_feet' => 'nullable|numeric',
-            'width_in_feet' => 'nullable|numeric',
+        $validated = $request->validate([
+            'fabrication_type' => 'required',
+            'name' => 'required',
+            'description' => 'required',
+            'images' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'status' => 'nullable',
         ]);
 
-        $fabrication->update($data);
+        if ($request->hasFile('images')) {
+            if ($fabrication->images) {
+                $oldImagePath = storage_path('app/public/' . $fabrication->images);
+                if (file_exists($oldImagePath)) {
+                    unlink($oldImagePath);
+                }
+            }
+            
+            $image = $request->file('images');
+            $imageName = time().'.'.$image->getClientOriginalExtension();
+            $path = $image->storeAs('fabrication_images', $imageName, 'public');
+            $validated['images'] = $path;
+        }
 
-        return redirect()->route('fabrication.index')->with('status', 'Fabrication updated successfully!');
+        $fabrication->update($validated);
+        
+        return redirect()
+            ->route('fabrication.index')
+            ->with('success', 'Fabrication updated successfully!');
     }
 
-    public function destroy(Fabrication $fabrication)
+    public function destroy(fabrication $fabrication)
     {
         $fabrication->delete();
-        return redirect()->route('fabrication.index')->with('status', 'Fabrication deleted successfully!');
+
+        return redirect()->route('fabrication.index')->with('success', 'Fabrication deleted successfully!');
     }
 }

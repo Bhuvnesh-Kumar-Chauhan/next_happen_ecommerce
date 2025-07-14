@@ -120,18 +120,23 @@
                     ? 'active' : '' }}"
                     >
                     <a href="#" class="nav-link has-dropdown" data-toggle="dropdown">
-                        <i class="fas fa-tools"></i> <span>{{ __('Services') }}</span>
+                        <i class="fas fa-tools"></i> <span>{{ __('Services Management') }}</span>
                     </a>
                     <ul class="dropdown-menu">
-                        @can('service_access')
+                        {{-- @can('service_access')
                             <li><a class="nav-link" href="{{ url('service') }}">{{ __('Service Type') }}</a></li>
-                        @endcan
+                        @endcan --}}
                         @can('venue_access')
-                            <li><a class="nav-link" href="{{ url('venues') }}">{{ __('Venues') }}</a></li>
+                            <li><a class="nav-link" href="{{ route('venues.index') }}">{{ __('Venues') }}</a></li>
                         @endcan
-                        @can('fabrication_access')
-                            <li><a class="nav-link" href="{{ url('fabrications') }}">{{ __('Fabrication') }}</a></li>
-                        @endcan
+                            <li><a class="nav-link" href="{{ route('talent.index') }}">{{ __('Talent') }}</a></li>
+                            <li><a class="nav-link" href="{{ route('fabrication.index') }}">{{ __('Fabrication') }}</a></li>
+                            <li><a class="nav-link" href="{{ route('equipments.index') }}">{{ __('Accessories') }}</a></li>
+                            
+
+                            {{-- <li><a class="nav-link" href="{{ route('services.index') }}">{{ __('Services Marketing') }}</a></li> --}}
+                       
+                        {{-- 
                         @can('sound_equipment_access')
                             <li><a class="nav-link" href="{{ url('sound-equipment') }}">{{ __('Sound Equipment') }}</a></li>
                         @endcan
@@ -161,7 +166,7 @@
                         @endcan
                         @can('marketing_service_access')
                             <li><a class="nav-link" href="{{ url('marketing-services') }}">{{ __('Marketing Services') }}</a></li>
-                        @endcan
+                        @endcan --}}
                     </ul>
                 </li>
             @endif
